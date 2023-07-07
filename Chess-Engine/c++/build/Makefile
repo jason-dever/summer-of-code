@@ -3,7 +3,7 @@ src_dir := ../src
 vpath %.cpp $(src_dir)
 vpath %.h $(src_dir)
 
-objects := main.o board.o movegen.o position.o precompute.o test.o
+objects := main.o board.o movegen.o position.o precompute.o test.o magic.o
 
 engine: $(objects)
 	g++ $^ -o $@
@@ -24,6 +24,9 @@ precompute.o: precompute.cpp precompute.h
 	g++ -c $< -o $@
 
 test.o: test.cpp test.h
+	g++ -c $< -o $@
+
+magic.o: magic.cpp magic.h
 	g++ -c $< -o $@
 
 clean:

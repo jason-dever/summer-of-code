@@ -23,11 +23,6 @@
 #define shiftDownLeft(x) x >> 7
 #define shiftDownRight(x) x >> 9
 
-struct Magic {
-    U64 mask;
-    U64 magic;
-};
-
 void initLookupTables();
 
 void initKnightLookups();

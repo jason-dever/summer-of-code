@@ -3,19 +3,17 @@
 #include "position.h"
 #include "movegen.h"
 #include "test.h"
-#include <iostream>
-U64 rook_moveboards[64][4096] {0xFFFFFFFF};
-U64 bishop_moveboards[64][512] {0};
-U64 knight_moveboards[64] {0};
-U64 pawn_moveboards[2][48] {0};
+#include "magic.h"
+#include <cmath>
 
-Magic magic_rook_tbl[64];
-Magic magic_bishop_tbl[64];
+U64 rook_moveboards[64][4096];
+U64 bishop_moveboards[64][512];
+U64 knight_moveboards[64];
+U64 pawn_moveboards[2][48];
 
 std::mt19937_64 mt(time(nullptr));
 
 void initLookupTables() {
-
     initRookLookups();
     initKnightLookups();
     initPawnLookups();
@@ -88,58 +86,24 @@ void initPawnLookups() {
 }
 
 void initRookLookups() {
-    // Array has to be to be allocated on the heap to avoid stack overflow.
-    U64* rook_blocker_combos = new U64[64*4096];  
+    // This array needs to be allocated on the heap to avoid stack overflow.
+    U64* rook_blocker_combos = new U64[64*4096];
+
+    U64 moves;
+    U64 index;
 
     for (int sq = 0; sq <= 63; sq++) {
-        magic_rook_tbl[sq].mask = blockerMaskRook(sq);
-        storeAllRookBlockerCombos(magic_rook_tbl[sq].mask, 0, rook_blocker_combos, sq, 0, 0);
-        initRookMagic(sq, rook_blocker_combos, rook_moveboards[sq]);
+        for (int i = 0; i < pow(2.0, __popcnt64(rook_relevant_occupancy[sq])); i++) {
+            storeAllRookBlockerCombos(rook_relevant_occupancy[sq], 0, rook_blocker_combos, sq, 0);
+            moves = moveboardRook(sq, rook_blocker_combos[4096*sq + i]);
+            index = (moves * rook_magics[sq]) >> rook_shifts[sq];
+            rook_moveboards[sq][index] = moves;
+        }
     }
     delete rook_blocker_combos;
     rook_blocker_combos = nullptr;
 }
 
 void initBishopLookups() {
-    U64 b;
-}
-
-void initRookMagic(int sq, const U64* blocker_tbl, U64 final_move_tbl[4096]) {
-    bool has_been_placed[4096] {false};
-
-    U64 candidate_magic;
-    bool magic_found = false;
-    int index;
-
-    while (!magic_found) {
-        candidate_magic = mt();
-        
-        for (int i = 0; i <= 4096; i++) {
-            index = (candidate_magic*blocker_tbl[i] >> (64 - __popcnt64(magic_rook_tbl[sq].mask)));
-            
-            if (has_been_placed[i]) {
-                if (final_move_tbl[index] != moveboardRook(sq, blocker_tbl[i])) {
-                    resetArray(has_been_placed, 4096);
-                    break;
-                }
-                else {
-                    continue;
-                }
-            }
-            final_move_tbl[index] = moveboardRook(sq, blocker_tbl[i]);
-            has_been_placed[index] = true;
-
-            if (i >= (2^__popcnt64(magic_rook_tbl[sq].mask))) {
-                magic_found = true;
-                break;
-            }
-        }
-    }
-    magic_rook_tbl[sq].magic = candidate_magic;
-}
-
-void resetArray(bool arr[], int size) {
-    for (int i = 0; i < size; i++) {
-        arr[size] = 0;
-    }
+    
 }
