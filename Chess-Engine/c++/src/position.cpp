@@ -3,7 +3,7 @@
 #include "test.h"
 #include <iostream>
 
-U64 blockerMaskRook(int sq) {
+U64 rookRelevantOccupancy(int sq) {
     U64 pos;
     zeroAndSetBit(pos, sq);
 
