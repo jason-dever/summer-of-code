@@ -3,7 +3,11 @@
 #include "test.h"
 #include <iostream>
 
+<<<<<<< HEAD
 U64 relevantOccupancyRook(int sq) {
+=======
+U64 rookRelevantOccupancy(int sq) {
+>>>>>>> 442e6cdf785fa09763de62f7f43df8aef7885130
     U64 pos;
     zeroAndSetBit(pos, sq);
 
