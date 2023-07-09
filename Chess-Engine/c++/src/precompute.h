@@ -23,6 +23,20 @@
 #define shiftDownLeft(x) x >> 7
 #define shiftDownRight(x) x >> 9
 
+extern U64 unplaced;
+
+extern U64 rook_moveboards[102400];
+extern U64 bishop_moveboards[5248];
+
+extern U64 rook_relevant_occupancy[64];
+extern U64 bishop_relevant_occupancy[64];
+
+extern int rook_index_offsets[64];
+extern int bishop_index_offsets[64];
+
+extern U64 knight_moveboards[64];
+extern U64 pawn_moveboards[2][64];
+
 void initLookupTables();
 
 void initKnightLookups();
@@ -30,8 +44,9 @@ void initPawnLookups();
 void initRookLookups();
 void initBishopLookups();
 
-void initRookMagic(int sq, const U64* blocker_tbl, U64 final_move_tbl[4096]);
+void initRelevantOccupancyLookups();
+void initOffsetLookups();
 
-void resetArray(bool arr[], int size);
+void initRookMagic(int sq, const U64* blocker_tbl, U64* final_move_tbl);
 
-void __attribute__((constructor)) initLookupTables();
+// void __attribute__((constructor)) initLookupTables();

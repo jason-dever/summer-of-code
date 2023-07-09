@@ -1,7 +1,6 @@
 #include <string>
 #include "board.h"
 #include "precompute.h"
-#include <iostream>
 
 // This function sucks. Too bad!
 void Board::storeFEN(const std::string FEN) {

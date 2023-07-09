@@ -3,21 +3,52 @@
 #include "position.h"
 #include "movegen.h"
 #include "test.h"
-#include "magic.h"
 #include <cmath>
 
-U64 rook_moveboards[64][4096];
-U64 bishop_moveboards[64][512];
+U64 unplaced = UINT64_MAX;
+
+U64 rook_moveboards[102400] {unplaced};
+U64 bishop_moveboards[5248] {unplaced};
+
+U64 rook_relevant_occupancy[64];
+U64 bishop_relevant_occupancy[64];
+
+int rook_index_offsets[64];
+int bishop_index_offsets[64];
+
 U64 knight_moveboards[64];
-U64 pawn_moveboards[2][48];
+U64 pawn_moveboards[2][64];
 
 std::mt19937_64 mt(time(nullptr));
 
 void initLookupTables() {
+    initOffsetLookups();
+    initRelevantOccupancyLookups();
+
     initRookLookups();
     initKnightLookups();
     initPawnLookups();
     initBishopLookups();
+}
+
+void initOffsetLookups() {
+    int rook_offset = 0;
+    int bishop_offset = 0;
+
+    for (int i = 0; i <= 63; i++) {
+        rook_index_offsets[i] = rook_offset;
+        bishop_index_offsets[i] = bishop_offset;
+
+        rook_offset += pow(2.0, __popcnt64(relevantOccupancyRook(i)));
+        bishop_offset += pow(2.0, __popcnt64(relevantOccupancyBishop(i)));
+    }
+}
+
+void initRelevantOccupancyLookups() {
+    for (int i = 0; i <= 63; i++) {
+        rook_relevant_occupancy[i] = relevantOccupancyRook(i);
+        bishop_relevant_occupancy[i] = relevantOccupancyBishop(i);
+    }
 }
 
 void initKnightLookups() {
@@ -80,25 +111,20 @@ void initPawnLookups() {
         if (col < 7) {
             takes |= shiftUpRight(pos); 
         }
-        pawn_moveboards[captures][sq-8] = takes;
-        pawn_moveboards[pushes][sq-8] = moves;
+        pawn_moveboards[captures][sq] = takes;
+        pawn_moveboards[pushes][sq] = moves;
     }
 }
 
 void initRookLookups() {
     // This array needs to be allocated on the heap to avoid stack overflow.
-    U64* rook_blocker_combos = new U64[64*4096];
+    U64* rook_blocker_combos = new U64[102400];
 
     U64 moves;
     U64 index;
 
     for (int sq = 0; sq <= 63; sq++) {
-        for (int i = 0; i < pow(2.0, __popcnt64(rook_relevant_occupancy[sq])); i++) {
-            storeAllRookBlockerCombos(rook_relevant_occupancy[sq], 0, rook_blocker_combos, sq, 0);
-            moves = moveboardRook(sq, rook_blocker_combos[4096*sq + i]);
-            index = (moves * rook_magics[sq]) >> rook_shifts[sq];
-            rook_moveboards[sq][index] = moves;
-        }
+
     }
     delete rook_blocker_combos;
     rook_blocker_combos = nullptr;
@@ -106,4 +132,8 @@ void initRookLookups() {
 
 void initBishopLookups() {
     
+}
+
+void initRookMagic(int sq, const U64* blocker_tbl) {
+
 }
