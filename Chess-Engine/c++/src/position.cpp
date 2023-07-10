@@ -3,11 +3,7 @@
 #include "test.h"
 #include <iostream>
 
-<<<<<<< HEAD
 U64 relevantOccupancyRook(int sq) {
-=======
-U64 rookRelevantOccupancy(int sq) {
->>>>>>> 442e6cdf785fa09763de62f7f43df8aef7885130
     U64 pos;
     zeroAndSetBit(pos, sq);
 
@@ -107,14 +103,15 @@ U64 moveboardBishop(int sq, U64 blocker_mask) {
     return moveboard;
 }
 
-int index_shift = 0;
+extern int index_shift;
 
 void storeAllRookBlockerCombos(U64 relevant_occupancy, U64 blocker_mask, U64* blocker_table, int sq, int depth) {
     int max_depth = __popcnt64(blocker_mask)-1;
     int current_bit_index = getNthSetBitIndex(blocker_mask, depth);
     
     if (depth == max_depth) {
-        blocker_table[rook_index_offsets[sq] + index_shift] = moveboardRook(sq, blocker_mask);
+        blocker_table[rook_index_offsets[sq] + index_shift] = blocker_mask;
+        index_shift++;
         return;
     }
 
@@ -137,6 +134,7 @@ int getNthSetBitIndex(U64 mask, int n) {
         if (count == n) {
             return index;
         }
+
         count++;
         resetBit(mask, index);
     }

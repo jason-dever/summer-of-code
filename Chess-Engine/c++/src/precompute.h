@@ -46,7 +46,8 @@ void initBishopLookups();
 
 void initRelevantOccupancyLookups();
 void initOffsetLookups();
+void initShiftLookups();
 
-void initRookMagic(int sq, const U64* blocker_tbl, U64* final_move_tbl);
+U64 computeRookMagic(int sq, const U64* blocker_tbl);
 
 // void __attribute__((constructor)) initLookupTables();
