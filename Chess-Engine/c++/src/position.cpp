@@ -105,19 +105,20 @@ U64 moveboardBishop(int sq, U64 blocker_mask) {
 
 extern int index_shift;
 
-void storeAllRookBlockerCombos(U64 relevant_occupancy, U64 blocker_mask, U64* blocker_table, int sq, int depth) {
-    int max_depth = __popcnt64(blocker_mask)-1;
-    int current_bit_index = getNthSetBitIndex(blocker_mask, depth);
-    
+void storeAllRookBlockerCombos(U64 blocker_mask, U64* blocker_table, int sq, int depth) {
+    U64 relevant_occupancy = relevantOccupancyRook(sq);
+    int max_depth = __popcnt64(relevant_occupancy)-1;
+    int current_bit_index = getNthSetBitIndex(relevant_occupancy, depth);
+
     if (depth == max_depth) {
         blocker_table[rook_index_offsets[sq] + index_shift] = blocker_mask;
         index_shift++;
         return;
     }
 
-    storeAllRookBlockerCombos(relevant_occupancy, blocker_mask, blocker_table, sq, depth+1);
+    storeAllRookBlockerCombos(blocker_mask, blocker_table, sq, depth+1);
     flipBit(blocker_mask, current_bit_index);
-    storeAllRookBlockerCombos(relevant_occupancy, blocker_mask, blocker_table, sq, depth+1);
+    storeAllRookBlockerCombos(blocker_mask, blocker_table, sq, depth+1);
 }
 
 void storeAllBishopBlockerCombos(U64 blocker_mask, U64 blocker_board, U64* blocker_table, int sq, int address_shift, int depth) {
@@ -138,6 +139,7 @@ int getNthSetBitIndex(U64 mask, int n) {
         count++;
         resetBit(mask, index);
     }
-    std::cerr << "nth set bit doesn't exist\n" << n << "\n";
+    std::cerr << n << "th set bit doesn't exist\n";
+    printBitboard(mask);
     return -1;
 }

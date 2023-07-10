@@ -50,4 +50,6 @@ void initShiftLookups();
 
 U64 computeRookMagic(int sq, const U64* blocker_tbl);
 
-// void __attribute__((constructor)) initLookupTables();
+inline void resetArraySegment(U64* arr, int start, int end);
+
+void __attribute__((constructor)) initLookupTables();

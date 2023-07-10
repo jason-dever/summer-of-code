@@ -50,15 +50,15 @@ void initOffsetLookups() {
         rook_index_offsets[i] = rook_offset;
         bishop_index_offsets[i] = bishop_offset;
 
-        rook_offset += pow( 2.0, __popcnt64(rook_relevant_occupancy[i]) );
-        bishop_offset += pow( 2.0, __popcnt64(bishop_relevant_occupancy[i]) );
+        rook_offset += pow( 2.0, __popcnt64( relevantOccupancyRook(i) ) );
+        bishop_offset += pow( 2.0, relevantOccupancyBishop(i) );
     }
 }
 
 void initShiftLookups() {
     for (int i = 0; i <= 63; i++) {
-        rook_shifts[i] = 64-__popcnt64(rook_relevant_occupancy[i]);
-        bishop_shifts[i] = 64-__popcnt64(bishop_relevant_occupancy[i]);
+        rook_shifts[i] = 64-__popcnt64(relevantOccupancyRook(i));
+        bishop_shifts[i] = 64-__popcnt64(relevantOccupancyBishop(i));
     }
 }
 
@@ -127,7 +127,7 @@ void initPawnLookups() {
     }
 }
 
-int index_shift;
+int index_shift = 0;
 
 void initRookLookups() {
     // This array needs to be allocated on the heap to avoid stack overflow.
@@ -137,7 +137,8 @@ void initRookLookups() {
     U64 index;
 
     for (int sq = 0; sq <= 63; sq++) {
-        storeAllRookBlockerCombos(rook_relevant_occupancy[sq], 0, rook_blocker_combos, sq, 0);
+        storeAllRookBlockerCombos(0, rook_blocker_combos, sq, 0);
+        computeRookMagic(sq, rook_blocker_combos);
         index_shift = 0;
     }
     delete rook_blocker_combos;
@@ -176,7 +177,6 @@ U64 computeRookMagic(int sq, const U64* blocker_tbl) {
             if ( i == pow( 2.0, __popcnt64(rook_relevant_occupancy[sq])-1 ) ) {
                 return candidate_magic;
             }
-
         }
     }
 }
