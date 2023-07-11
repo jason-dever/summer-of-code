@@ -103,23 +103,26 @@ U64 moveboardBishop(int sq, U64 blocker_mask) {
     return moveboard;
 }
 
-extern int index_shift;
+void storeAllRookBlockerCombos(U64* blocker_table) {
+    U64 blocker_mask = 0;
+    U64 relevant_occupancy;
+    int current_bit;
+    int current_bit_index;
+    U64 bit;
+    
+    for (int sq = 0; sq <= 63; sq++) {
+        relevant_occupancy = relevantOccupancyRook(sq);
+        for (int i = 0; i < pow( 2.0, __popcnt64(relevant_occupancy) ); i++) {
+            bit = i % 2;
+            current_bit = i % __popcnt64(relevant_occupancy);
+            current_bit_index = getNthSetBitIndex(relevant_occupancy, current_bit);
 
-void storeAllRookBlockerCombos(U64 blocker_mask, U64* blocker_table, int sq, int depth) {
-    U64 relevant_occupancy = relevantOccupancyRook(sq);
-    int max_depth = __popcnt64(relevant_occupancy);
-
-    if (depth == max_depth) {
-        blocker_table[rook_index_offsets[sq] + index_shift] = blocker_mask;
-        index_shift++;
-        return;
+            resetBit(blocker_mask, current_bit_index);
+            blocker_mask |= bit << current_bit_index;
+            
+            blocker_table[rook_index_offsets[sq]+i] == blocker_mask;
+        }
     }
-
-    int current_bit_index = getNthSetBitIndex(relevant_occupancy, depth);
-
-    storeAllRookBlockerCombos(blocker_mask, blocker_table, sq, depth+1);
-    flipBit(blocker_mask, current_bit_index);
-    storeAllRookBlockerCombos(blocker_mask, blocker_table, sq, depth+1);
 }
 
 void storeAllBishopBlockerCombos(U64 blocker_mask, U64 blocker_board, U64* blocker_table, int sq, int address_shift, int depth) {

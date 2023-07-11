@@ -127,21 +127,12 @@ void initPawnLookups() {
     }
 }
 
-int index_shift = 0;
-
 void initRookLookups() {
     // This array needs to be allocated on the heap to avoid stack overflow.
     U64* rook_blocker_combos = new U64[102400] {0};
-
-    U64 blocker_mask = 0;
-    U64 moves;
-    U64 index;
-
+    storeAllRookBlockerCombos(rook_blocker_combos);
     for (int sq = 0; sq <= 63; sq++) {
-        storeAllRookBlockerCombos(0, rook_blocker_combos, sq, 0);
-        index_shift = 0;
-        computeRookMagic(sq, rook_blocker_combos);
-        std::cout << sq << "\n";
+        // computeRookMagic(sq, rook_blocker_combos);
     }
     delete rook_blocker_combos;
     rook_blocker_combos = nullptr;
