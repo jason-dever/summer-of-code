@@ -51,7 +51,7 @@ void initOffsetLookups() {
         bishop_index_offsets[i] = bishop_offset;
 
         rook_offset += pow( 2.0, __popcnt64( relevantOccupancyRook(i) ) );
-        bishop_offset += pow( 2.0, relevantOccupancyBishop(i) );
+        bishop_offset += pow( 2.0, __popcnt64( relevantOccupancyBishop(i) ) );
     }
 }
 
@@ -131,54 +131,49 @@ int index_shift = 0;
 
 void initRookLookups() {
     // This array needs to be allocated on the heap to avoid stack overflow.
-    U64* rook_blocker_combos = new U64[102400];
+    U64* rook_blocker_combos = new U64[102400] {0};
 
+    U64 blocker_mask = 0;
     U64 moves;
     U64 index;
 
     for (int sq = 0; sq <= 63; sq++) {
         storeAllRookBlockerCombos(0, rook_blocker_combos, sq, 0);
-        computeRookMagic(sq, rook_blocker_combos);
         index_shift = 0;
+        computeRookMagic(sq, rook_blocker_combos);
+        std::cout << sq << "\n";
     }
     delete rook_blocker_combos;
     rook_blocker_combos = nullptr;
 }
 
 void initBishopLookups() {
-    
+
 }
 
 U64 computeRookMagic(int sq, const U64* blocker_tbl) {
-    U64 candidate_magic;
-    U64 blocker_board;
+    U64 candidate_magic = mt();
+    U64 blocker_mask;
 
     int offset = rook_index_offsets[sq];
     int magical_index;
 
-    while (true) {
-        candidate_magic = mt();
+    for (int i = 0; i < pow( 2.0, __popcnt64(relevantOccupancyRook(sq)) ); i++) {
+        blocker_mask = blocker_tbl[offset+i];
+        magical_index = (candidate_magic*blocker_mask) >> rook_shifts[sq];
 
-        for (int i = 0; true; i++) {
-            blocker_board = blocker_tbl[offset+i];
-
-            magical_index = (candidate_magic*blocker_board) >> rook_shifts[sq];
-
-            if (rook_moveboards[offset+magical_index] == unplaced) {
-                rook_moveboards[offset+magical_index] = moveboardRook(sq, blocker_board);
-            }
-            else { // Collision
-                if (rook_moveboards[offset+magical_index] != moveboardRook(sq, blocker_board)) {
-                    resetArraySegment(rook_moveboards, offset, rook_index_offsets[sq+1]-1);
-                    break;
-                }
-            }
-
-            if ( i == pow( 2.0, __popcnt64(rook_relevant_occupancy[sq])-1 ) ) {
-                return candidate_magic;
+        if (rook_moveboards[offset+magical_index] == unplaced) {
+            rook_moveboards[offset+magical_index] = moveboardRook(sq, blocker_mask);
+        }
+        else { // Collision
+            if (rook_moveboards[offset+magical_index] != moveboardRook(sq, blocker_mask)) {
+                resetArraySegment(rook_moveboards, offset, rook_index_offsets[sq+1]-1);
+                i = -1; // Iterator will increment up to 0 before anything is done with it. 
+                candidate_magic = mt();
             }
         }
     }
+    return candidate_magic;
 }
 
 inline void resetArraySegment(U64* arr, int start, int end) {

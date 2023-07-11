@@ -107,14 +107,15 @@ extern int index_shift;
 
 void storeAllRookBlockerCombos(U64 blocker_mask, U64* blocker_table, int sq, int depth) {
     U64 relevant_occupancy = relevantOccupancyRook(sq);
-    int max_depth = __popcnt64(relevant_occupancy)-1;
-    int current_bit_index = getNthSetBitIndex(relevant_occupancy, depth);
+    int max_depth = __popcnt64(relevant_occupancy);
 
     if (depth == max_depth) {
         blocker_table[rook_index_offsets[sq] + index_shift] = blocker_mask;
         index_shift++;
         return;
     }
+
+    int current_bit_index = getNthSetBitIndex(relevant_occupancy, depth);
 
     storeAllRookBlockerCombos(blocker_mask, blocker_table, sq, depth+1);
     flipBit(blocker_mask, current_bit_index);
