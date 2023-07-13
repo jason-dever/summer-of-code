@@ -7,17 +7,14 @@
 
 U64 unplaced = UINT64_MAX;
 
-U64 rook_moveboards[102400] {unplaced};
-U64 bishop_moveboards[5248] {unplaced};
+U64 rook_moveboards[102400];
+U64 bishop_moveboards[5248];
 
 U64 rook_relevant_occupancy[64];
 U64 bishop_relevant_occupancy[64];
 
 int rook_index_offsets[64];
 int bishop_index_offsets[64];
-
-int rook_shifts[64];
-int bishop_shifts[64];
 
 U64 knight_moveboards[64];
 U64 pawn_moveboards[2][64];
@@ -27,8 +24,7 @@ std::mt19937_64 mt(time(nullptr));
 void initLookupTables() {
     initRelevantOccupancyLookups();
     initOffsetLookups();
-    initShiftLookups();
-
+    
     initRookLookups();
     initKnightLookups();
     initPawnLookups();
@@ -52,13 +48,6 @@ void initOffsetLookups() {
 
         rook_offset += pow( 2.0, __popcnt64( relevantOccupancyRook(i) ) );
         bishop_offset += pow( 2.0, __popcnt64( relevantOccupancyBishop(i) ) );
-    }
-}
-
-void initShiftLookups() {
-    for (int i = 0; i <= 63; i++) {
-        rook_shifts[i] = 64-__popcnt64(relevantOccupancyRook(i));
-        bishop_shifts[i] = 64-__popcnt64(relevantOccupancyBishop(i));
     }
 }
 
@@ -127,12 +116,13 @@ void initPawnLookups() {
     }
 }
 
+
 void initRookLookups() {
     // This array needs to be allocated on the heap to avoid stack overflow.
-    U64* rook_blocker_combos = new U64[102400] {0};
-    storeAllRookBlockerCombos(rook_blocker_combos);
-    for (int sq = 0; sq <= 63; sq++) {
-        // computeRookMagic(sq, rook_blocker_combos);
+    U64* rook_blocker_combos = new U64[102400];
+
+    for (int sq = 9; sq <= 9; sq++) {
+        std::cout << sq << "\n";
     }
     delete rook_blocker_combos;
     rook_blocker_combos = nullptr;
@@ -140,35 +130,4 @@ void initRookLookups() {
 
 void initBishopLookups() {
 
-}
-
-U64 computeRookMagic(int sq, const U64* blocker_tbl) {
-    U64 candidate_magic = mt();
-    U64 blocker_mask;
-
-    int offset = rook_index_offsets[sq];
-    int magical_index;
-
-    for (int i = 0; i < pow( 2.0, __popcnt64(relevantOccupancyRook(sq)) ); i++) {
-        blocker_mask = blocker_tbl[offset+i];
-        magical_index = (candidate_magic*blocker_mask) >> rook_shifts[sq];
-
-        if (rook_moveboards[offset+magical_index] == unplaced) {
-            rook_moveboards[offset+magical_index] = moveboardRook(sq, blocker_mask);
-        }
-        else { // Collision
-            if (rook_moveboards[offset+magical_index] != moveboardRook(sq, blocker_mask)) {
-                resetArraySegment(rook_moveboards, offset, rook_index_offsets[sq+1]-1);
-                i = -1; // Iterator will increment up to 0 before anything is done with it. 
-                candidate_magic = mt();
-            }
-        }
-    }
-    return candidate_magic;
-}
-
-inline void resetArraySegment(U64* arr, int start, int end) {
-    for (int i = start; i <= end; i++) {
-        arr[i] = unplaced;
-    }
 }

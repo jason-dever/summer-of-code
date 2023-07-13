@@ -103,25 +103,24 @@ U64 moveboardBishop(int sq, U64 blocker_mask) {
     return moveboard;
 }
 
-void storeAllRookBlockerCombos(U64* blocker_table) {
-    U64 blocker_mask = 0;
-    U64 relevant_occupancy;
-    int current_bit;
-    int current_bit_index;
-    U64 bit;
-    
-    for (int sq = 0; sq <= 63; sq++) {
-        relevant_occupancy = relevantOccupancyRook(sq);
-        for (int i = 0; i < pow( 2.0, __popcnt64(relevant_occupancy) ); i++) {
-            bit = i % 2;
-            current_bit = i % __popcnt64(relevant_occupancy);
-            current_bit_index = getNthSetBitIndex(relevant_occupancy, current_bit);
+extern int index_shift;
 
-            resetBit(blocker_mask, current_bit_index);
-            blocker_mask |= bit << current_bit_index;
-            
-            blocker_table[rook_index_offsets[sq]+i] == blocker_mask;
-        }
+void storeAllRookBlockerCombos(U64* blocker_table) {
+    U64 blocker_mask;
+    U64 relevant_occupancy;
+    int count;
+
+    for (int sq = 0; sq <= 63; sq++) {
+        blocker_mask = 0;
+        count = 0;
+        relevant_occupancy = relevantOccupancyRook(sq);
+
+        // Uses the carry rippler effect to traverse all subsets of relevant_occupancy
+        do {
+            blocker_table[rook_index_offsets[sq]+count] = blocker_mask;
+            blocker_mask = (blocker_mask - relevant_occupancy) & relevant_occupancy;
+            count++;
+        } while (blocker_mask);
     }
 }
 
