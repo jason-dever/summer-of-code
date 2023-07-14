@@ -1,12 +1,11 @@
 #pragma once
 
-#define U64 unsigned long long
 
 #include <string>
 #include <iostream>
 #include <intrin.h>
-#include <random>
-#include <ctime>
+
+#define U64 unsigned long long
 
 #define setBit(mask, index) mask |= 1ULL << index
 #define zeroAndSetBit(mask, index) mask = 1ULL << index
@@ -23,28 +22,24 @@
 #define shiftDownLeft(x) x >> 7
 #define shiftDownRight(x) x >> 9
 
-extern U64 unplaced;
+enum Turns {white, black};
 
+extern U64 knight_moveboards[64];
+extern U64 pawn_moveboards[2][2][64];
 extern U64 rook_moveboards[102400];
 extern U64 bishop_moveboards[5248];
 
 extern U64 rook_relevant_occupancy[64];
 extern U64 bishop_relevant_occupancy[64];
 
-extern int rook_index_offsets[64];
-extern int bishop_index_offsets[64];
-
-extern U64 knight_moveboards[64];
-extern U64 pawn_moveboards[2][64];
+extern int rook_offsets[64];
+extern int bishop_offsets[64];
 
 void initLookupTables();
 
-void initKnightLookups();
-void initPawnLookups();
 void initRookLookups();
 void initBishopLookups();
-
-void initRelevantOccupancyLookups();
-void initOffsetLookups();
+void initKnightLookups();
+void initPawnLookups();
 
 void __attribute__((constructor)) initLookupTables();

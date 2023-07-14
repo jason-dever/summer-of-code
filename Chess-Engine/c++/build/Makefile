@@ -3,31 +3,31 @@ src_dir := ../src
 vpath %.cpp $(src_dir)
 vpath %.h $(src_dir)
 
-objects := main.o board.o movegen.o position.o precompute.o test.o #magic.o
+CXXFLAGS := -O3 -march=znver3
+CXX := g++
+
+objects := main.o board.o movegen.o position.o precompute.o test.o
 
 engine: $(objects)
-	g++ $^ -o $@
+	$(CXX) $(CXXFLAGS) $^ -o $@
 
 main.o: main.cpp
-	g++ -c $< -o $@
+	$(CXX) $(CXXFLAGS) -c $< -o $@
 
 board.o: board.cpp board.h
-	g++ -c $< -o $@
+	$(CXX) $(CXXFLAGS) -c $< -o $@
 
 movegen.o: movegen.cpp movegen.h
-	g++ -c $< -o $@
+	$(CXX) $(CXXFLAGS) -c $< -o $@
 
 position.o: position.cpp position.h
-	g++ -c $< -o $@
+	$(CXX) $(CXXFLAGS) -c $< -o $@
 
 precompute.o: precompute.cpp precompute.h
-	g++ -c $< -o $@
+	$(CXX) $(CXXFLAGS) -c $< -o $@
 
 test.o: test.cpp test.h
-	g++ -c $< -o $@
-
-# magic.o: magic.cpp magic.h
-# 	g++ -c $< -o $@
+	$(CXX) $(CXXFLAGS) -c $< -o $@
 
 clean:
 	del /Q *.o

@@ -4,50 +4,60 @@
 #include "movegen.h"
 #include "test.h"
 #include <cmath>
+#include <immintrin.h>
 
-U64 unplaced = UINT64_MAX;
-
+U64 knight_moveboards[64];
+U64 pawn_moveboards[2][2][64];
 U64 rook_moveboards[102400];
 U64 bishop_moveboards[5248];
 
 U64 rook_relevant_occupancy[64];
 U64 bishop_relevant_occupancy[64];
 
-int rook_index_offsets[64];
-int bishop_index_offsets[64];
-
-U64 knight_moveboards[64];
-U64 pawn_moveboards[2][64];
-
-std::mt19937_64 mt(time(nullptr));
+int rook_offsets[64];
+int bishop_offsets[64];
 
 void initLookupTables() {
-    initRelevantOccupancyLookups();
-    initOffsetLookups();
-    
     initRookLookups();
+    initBishopLookups();
     initKnightLookups();
     initPawnLookups();
-    initBishopLookups();
 }
 
-void initRelevantOccupancyLookups() {
-    for (int i = 0; i <= 63; i++) {
-        rook_relevant_occupancy[i] = relevantOccupancyRook(i);
-        bishop_relevant_occupancy[i] = relevantOccupancyBishop(i);
+void initRookLookups() {
+    int offset = 0;
+    U64 subset = 0;
+
+    for (int sq = 0; sq <= 63; sq++) {
+        rook_relevant_occupancy[sq] = relevantOccupancyRook(sq);
+        rook_offsets[sq] = offset;
+
+        // Carry-Rippler trick enumerates all subsets of rook_relevant_occupancy[sq]
+        // and populates rook_moveboards.
+        do {
+            rook_moveboards[offset + _pext_u64(subset, rook_relevant_occupancy[sq])] = moveboardRook(sq, subset);
+            subset = (subset - rook_relevant_occupancy[sq]) & rook_relevant_occupancy[sq];
+        } while (subset);
+
+        offset += pow ( 2.0, __popcnt64(rook_relevant_occupancy[sq]) );
     }
 }
 
-void initOffsetLookups() {
-    int rook_offset = 0;
-    int bishop_offset = 0;
+void initBishopLookups() {
+    int offset = 0;
+    U64 subset = 0;
 
-    for (int i = 0; i <= 63; i++) {
-        rook_index_offsets[i] = rook_offset;
-        bishop_index_offsets[i] = bishop_offset;
+    for (int sq = 0; sq <= 63; sq++) {
+        bishop_relevant_occupancy[sq] = relevantOccupancyBishop(sq);
+        bishop_offsets[sq] = offset;
 
-        rook_offset += pow( 2.0, __popcnt64( relevantOccupancyRook(i) ) );
-        bishop_offset += pow( 2.0, __popcnt64( relevantOccupancyBishop(i) ) );
+        // Same trick as in initRookLookups().
+        do {
+            bishop_moveboards[offset + _pext_u64(subset, bishop_relevant_occupancy[sq])] = moveboardBishop(sq, subset);
+            subset = (subset - bishop_relevant_occupancy[sq]) & bishop_relevant_occupancy[sq];
+        } while (subset);
+
+        offset += pow ( 2.0, __popcnt64(bishop_relevant_occupancy[sq]) );
     }
 }
 
@@ -61,20 +71,20 @@ void initKnightLookups() {
         zeroAndSetBit(pos, sq);
         col = (sq % 8);
 
-        if (col > 0) {
+        if (col < 7) {
             moves |= (pos << 17);
             moves |= (pos >> 15);
         
-            if (col > 1) {
+            if (col < 6) {
                 moves |= (pos << 10);
                 moves |= (pos >> 6);
             }
         }
-        if (col < 7) {
+        if (col > 0) {
             moves |= (pos >> 17);
             moves |= (pos << 15);
 
-            if (col < 6) {
+            if (col > 1) {
                 moves |= (pos >> 10);
                 moves |= (pos << 6);
             }
@@ -84,9 +94,8 @@ void initKnightLookups() {
 }
 
 void initPawnLookups() {
-    /* When using the pawn lookup table you'll need to subtract the square by 8
-    because even though arrays start at 0, pawns do not. */
-   // TODO: figure out how to rotate the board square for black pawns
+   /* When using pawn lookup tables, you will need to rotate the square by indexing the array with
+   63-sq and rotate the output. */
 
     U64 pos;
     int col;
@@ -100,34 +109,26 @@ void initPawnLookups() {
         zeroAndSetBit(pos, sq);
 
         moves |= shiftUp(pos);
-
-        if (sq <= 15 && sq >= 8) {
-            moves |= shiftUp(pos)*2;
-        }
-
-        if (col > 0) {
-            takes |= shiftUpLeft(pos);
-        }
-        if (col < 7) {
-            takes |= shiftUpRight(pos); 
-        }
-        pawn_moveboards[captures][sq] = takes;
-        pawn_moveboards[pushes][sq] = moves;
+        if (sq <= 15 && sq >= 8) moves |= shiftUp(pos)*2;
+        if (col > 0) takes |= shiftUpRight(pos);
+        if (col < 7) takes |= shiftUpLeft(pos); 
+        
+        pawn_moveboards[white][captures][sq] = takes;
+        pawn_moveboards[white][pushes][sq] = moves;
     }
-}
 
+    for (int sq = 55; sq >= 8; sq--) {
+        moves = 0;
+        takes = 0;
+        col = (sq % 8);
+        zeroAndSetBit(pos, sq);
 
-void initRookLookups() {
-    // This array needs to be allocated on the heap to avoid stack overflow.
-    U64* rook_blocker_combos = new U64[102400];
-
-    for (int sq = 9; sq <= 9; sq++) {
-        std::cout << sq << "\n";
+        moves |= shiftDown(pos);
+        if (sq <= 55 && sq >= 48) moves |= shiftDown(pos)*2;
+        if (col > 0) takes |= shiftDownRight(pos);
+        if (col < 7) takes |= shiftDownLeft(pos);
+        
+        pawn_moveboards[black][captures][sq] = takes;
+        pawn_moveboards[black][pushes][sq] = moves;
     }
-    delete rook_blocker_combos;
-    rook_blocker_combos = nullptr;
-}
-
-void initBishopLookups() {
-
 }

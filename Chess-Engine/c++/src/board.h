@@ -6,7 +6,7 @@
 enum PiecesEnum {pawns, knights, bishops, rooks, queens, king};
 
 struct Board {
-    bool white_turn;
+    bool black_turn;
 
     U64 w_pieces[6] {0};
     U64 b_pieces[6] {0};

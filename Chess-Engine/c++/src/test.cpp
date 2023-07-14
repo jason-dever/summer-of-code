@@ -60,7 +60,7 @@ void printBoard(Board board) {
             line = std::to_string(rank) + "    ";
         }
     }
-    std::string turn = (board.white_turn) ? "white" : "black";
+    std::string turn = (board.black_turn) ? "black" : "white";
     std::string en_passant = "no";
     std::string castle_rights = "no";
 

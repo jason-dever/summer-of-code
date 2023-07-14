@@ -36,7 +36,7 @@ void Board::storeFEN(const std::string FEN) {
         i++;
     }
     i++;
-    white_turn = (FEN[i] == 'w') ? true : false;
+    black_turn = (FEN[i] == 'b') ? true : false;
     i++;
 
     do {
