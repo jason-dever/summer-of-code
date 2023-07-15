@@ -3,7 +3,7 @@ src_dir := ../src
 vpath %.cpp $(src_dir)
 vpath %.h $(src_dir)
 
-CXXFLAGS := -O3 -march=znver3
+CXXFLAGS := -Wall -Werror -Wpedantic -O3 -march=znver3
 CXX := g++
 
 objects := main.o board.o movegen.o position.o precompute.o test.o
