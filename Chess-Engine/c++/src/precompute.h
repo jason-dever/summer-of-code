@@ -3,7 +3,7 @@
 
 #include <string>
 #include <iostream>
-#include <intrin.h>
+#include <immintrin.h>
 
 #define U64 unsigned long long
 
@@ -24,10 +24,11 @@
 
 enum Turns {white, black};
 
-extern U64 knight_moveboards[64];
-extern U64 pawn_moveboards[2][2][64];
 extern U64 rook_moveboards[102400];
 extern U64 bishop_moveboards[5248];
+extern U64 knight_moveboards[64];
+extern U64 pawn_moveboards[2][2][64];
+extern U64 king_moveboards[64];
 
 extern U64 rook_relevant_occupancy[64];
 extern U64 bishop_relevant_occupancy[64];
@@ -41,5 +42,6 @@ void initRookLookups();
 void initBishopLookups();
 void initKnightLookups();
 void initPawnLookups();
+void initKingLookups();
 
 void __attribute__((constructor)) initLookupTables();

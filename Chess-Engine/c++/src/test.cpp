@@ -77,7 +77,7 @@ void printBoard(Board board) {
         if (board.castle_squares & 0x1) castle_rights.append("K");
         if (board.castle_squares >> 7 & 0x1) castle_rights.append("Q");
         if (board.castle_squares >> 56 & 0x1) castle_rights.append("k");
-        if (board.castle_squares >> 63 & 0x1) castle_rights.append("q");
+        if (board.castle_squares >> 63) castle_rights.append("q");
     }
 
     cout << "\n     a b c d e f g h\n\n" << "     Turn: " << turn << 
