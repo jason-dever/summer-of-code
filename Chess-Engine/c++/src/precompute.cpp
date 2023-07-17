@@ -1,8 +1,6 @@
 #include "precompute.h"
 #include "board.h"
 #include "position.h"
-#include "movegen.h"
-#include "test.h"
 #include <cmath>
 #include <intrin.h>
 #include <immintrin.h>

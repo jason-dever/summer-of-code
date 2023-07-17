@@ -1,7 +1,6 @@
 #include "position.h"
 #include "precompute.h"
 #include "test.h"
-#include <iostream>
 
 U64 relevantOccupancyRook(int sq) {
     U64 pos;

@@ -22,7 +22,7 @@
 #define shiftDownLeft(x) x >> 7
 #define shiftDownRight(x) x >> 9
 
-enum Turns {white, black};
+enum PawnMovesEnum {captures, pushes};
 
 extern U64 rook_moveboards[102400];
 extern U64 bishop_moveboards[5248];

@@ -1,5 +1,6 @@
 #include <string>
 #include "board.h"
+#include <iostream>
 #include "precompute.h"
 
 // This function sucks. Too bad!
@@ -11,32 +12,29 @@ void Board::storeFEN(const std::string FEN) {
         if (FEN[i] < 58 && FEN[i] > 48) { // X number of empty squares
             sq -= (FEN[i] - 48);
         }
-        else if (FEN[i] < 123 && FEN[i] > 96) { // Black piece
+        else if (FEN[i] != '/') {
             switch (FEN[i]) {
-                case 'p': setBit(b_pieces[pawns], sq); break;
-                case 'n': setBit(b_pieces[knights], sq); break;
-                case 'b': setBit(b_pieces[bishops], sq); break;
-                case 'r': setBit(b_pieces[rooks], sq); break;
-                case 'q': setBit(b_pieces[queens], sq); break;
-                case 'k': setBit(b_pieces[king], sq); break;
-            }
-            sq--;
-        }
-        else if (FEN[i] < 91 && FEN[i] > 64) { // White piece
-            switch (FEN[i]) {
-                case 'P': setBit(w_pieces[pawns], sq); break;
-                case 'N': setBit(w_pieces[knights], sq); break;
-                case 'B': setBit(w_pieces[bishops], sq); break;
-                case 'R': setBit(w_pieces[rooks], sq); break;
-                case 'Q': setBit(w_pieces[queens], sq); break;
-                case 'K': setBit(w_pieces[king], sq); break;
+                case 'p': setBit(pieces[black][pawns], sq); break;
+                case 'n': setBit(pieces[black][knights], sq); break;
+                case 'b': setBit(pieces[black][bishops], sq); break;
+                case 'r': setBit(pieces[black][rooks], sq); break;
+                case 'q': setBit(pieces[black][queens], sq); break;
+                case 'k': setBit(pieces[black][king], sq); break;
+
+                case 'P': setBit(pieces[white][pawns], sq); break;
+                case 'N': setBit(pieces[white][knights], sq); break;
+                case 'B': setBit(pieces[white][bishops], sq); break;
+                case 'R': setBit(pieces[white][rooks], sq); break;
+                case 'Q': setBit(pieces[white][queens], sq); break;
+                case 'K': setBit(pieces[white][king], sq); break;
+
             }
             sq--;
         }
         i++;
     }
     i++;
-    black_turn = (FEN[i] == 'b') ? true : false;
+    turn = (FEN[i] == 'b') ? true : false;
     i++;
 
     do {
@@ -81,11 +79,11 @@ void Board::storeFEN(const std::string FEN) {
 }
 
 U64 Board::whitePieces() {
-    return (w_pieces[pawns] | w_pieces[knights] | w_pieces[bishops] 
-            | w_pieces[rooks] | w_pieces[queens] | w_pieces[king]);
+    return (pieces[white][pawns] | pieces[white][knights] | pieces[white][bishops] 
+            | pieces[white][rooks] | pieces[white][queens] | pieces[white][king]);
 }
 
 U64 Board::blackPieces() {
-    return (b_pieces[pawns] | b_pieces[knights] | b_pieces[bishops] 
-            | b_pieces[rooks] | b_pieces[queens] | b_pieces[king]); 
+    return (pieces[black][pawns] | pieces[black][knights] | pieces[black][bishops] 
+            | pieces[black][rooks] | pieces[black][queens] | pieces[black][king]); 
 }
