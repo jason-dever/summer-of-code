@@ -17,7 +17,7 @@ main.o: main.cpp
 board.o: board.cpp board.h
 	$(CXX) $(CXXFLAGS) -c $< -o $@
 
-movegen.o: movegen.cpp movegen.h
+movegen.o: movegen.cpp
 	$(CXX) $(CXXFLAGS) -c $< -o $@
 
 position.o: position.cpp position.h

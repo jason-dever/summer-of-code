@@ -37,14 +37,14 @@ void printBoard(Board board) {
     for (int i = 63; i >= 0; i--) {
         if (( board.blackPieces() & (1ULL << i) ) != 0) {
             for (int j = pawns; j <= king; j++) {
-                if (board.b_pieces[j] & (1ULL << i)) {
+                if (board.pieces[black][j] & (1ULL << i)) {
                     line.append(std::string(1, pieces[j]));
                 }
             }
         }
         else if (( board.whitePieces() & (1ULL << i) ) != 0) {
             for (int j = pawns; j <= king; j++) {
-                if (board.w_pieces[j] & (1ULL << i)) {
+                if (board.pieces[white][j] & (1ULL << i)) {
                     line.append(std::string(1, pieces[j]-32));
                 }
             }
@@ -60,7 +60,7 @@ void printBoard(Board board) {
             line = std::to_string(rank) + "    ";
         }
     }
-    std::string turn = (board.black_turn) ? "black" : "white";
+    std::string turn = (board.turn) ? "black" : "white";
     std::string en_passant = "no";
     std::string castle_rights = "no";
 
