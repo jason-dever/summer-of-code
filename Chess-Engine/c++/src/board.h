@@ -21,6 +21,7 @@ struct Board {
     
     U64 whitePieces();
     U64 blackPieces();
+    U64 sidePieces(bool side);
 
     inline void genMoves();
     
@@ -31,4 +32,6 @@ struct Board {
         inline void genBishopMoves();
         inline void genRookMoves();
         inline void genQueenMoves();
+
+        inline U64 getAttackedSquares(bool opponent);
 };

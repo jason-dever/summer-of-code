@@ -78,12 +78,61 @@ void Board::storeFEN(const std::string FEN) {
     full_moves = atoi(FEN.substr(i).c_str());
 }
 
-U64 Board::whitePieces() {
+inline U64 Board::whitePieces() {
     return (pieces[white][pawns] | pieces[white][knights] | pieces[white][bishops] 
             | pieces[white][rooks] | pieces[white][queens] | pieces[white][king]);
 }
 
-U64 Board::blackPieces() {
+inline U64 Board::blackPieces() {
     return (pieces[black][pawns] | pieces[black][knights] | pieces[black][bishops] 
             | pieces[black][rooks] | pieces[black][queens] | pieces[black][king]); 
+}
+
+inline U64 Board::sidePieces(bool side) {
+    return (side) ? whitePieces() : blackPieces();
+}
+
+inline U64 Board::getAttackedSquares(bool opponent) {
+    /* I unroll a for loop here for a little more performance.
+    It looks bad but it saves a few cpu cycles. */
+
+    int sq;
+    U64 opponent_attacked_squares = 0;
+    U64 bitboard;
+    U64 occupancy = blackPieces() | whitePieces();
+
+    bitboard = pieces[opponent][pawns];
+    while (bitboard) {
+        sq = _tzcnt_u64(bitboard);
+        opponent_attacked_squares |= pawn_moveboards[opponent][captures][sq];
+        flipBit(bitboard, sq);
+    }
+    bitboard = pieces[opponent][knights];
+    while (bitboard) {
+        sq = _tzcnt_u64(bitboard);
+        opponent_attacked_squares |= knight_moveboards[sq];
+        flipBit(bitboard, sq);
+    }
+    bitboard = pieces[opponent][bishops];
+    while (bitboard) {
+        sq = _tzcnt_u64(bitboard);
+        opponent_attacked_squares |= _pext_u64(occupancy, bishop_relevant_occupancy[sq]);
+        flipBit(bitboard, sq);
+    }
+    bitboard = pieces[opponent][rooks];
+    while (bitboard) {
+        sq = _tzcnt_u64(bitboard);
+        opponent_attacked_squares |= _pext_u64(occupancy, rook_relevant_occupancy[sq]);
+        flipBit(bitboard, sq);
+    }
+    bitboard = pieces[opponent][queens];
+    while (bitboard) {
+        sq = _tzcnt_u64(bitboard);
+        opponent_attacked_squares |= _pext_u64(occupancy, rook_relevant_occupancy[sq]) 
+            | _pext_u64(occupancy, bishop_relevant_occupancy[sq]);
+        flipBit(bitboard, sq);
+    }
+    opponent_attacked_squares |= king_moveboards[_tzcnt_u64(pieces[opponent][king])];
+    
+    return opponent_attacked_squares;
 }
