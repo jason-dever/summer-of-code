@@ -48,5 +48,6 @@
         "compare": "cpp",
         "concepts": "cpp",
         "numbers": "cpp"
-    }
+    },
+    "git.ignoreLimitWarning": true
 }

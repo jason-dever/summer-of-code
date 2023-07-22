@@ -26,12 +26,14 @@ struct Board {
     inline void genMoves();
     
     private:
-        inline void genKnightMoves();
+        inline void initMovegen();
+
         inline void genKingMoves();
-        inline void genPawnMoves();
+        inline void genKnightMoves();
         inline void genBishopMoves();
         inline void genRookMoves();
         inline void genQueenMoves();
+        inline void genPawnMoves();
 
         inline U64 getAttackedSquares(bool opponent);
 };

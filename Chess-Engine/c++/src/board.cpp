@@ -1,6 +1,5 @@
 #include <string>
 #include "board.h"
-#include <iostream>
 #include "precompute.h"
 
 // This function sucks. Too bad!
@@ -99,7 +98,7 @@ inline U64 Board::getAttackedSquares(bool opponent) {
     int sq;
     U64 opponent_attacked_squares = 0;
     U64 bitboard;
-    U64 occupancy = blackPieces() | whitePieces();
+    U64 occupancy = (blackPieces() | whitePieces()) & ~(pieces[~opponent][king]);
 
     bitboard = pieces[opponent][pawns];
     while (bitboard) {
