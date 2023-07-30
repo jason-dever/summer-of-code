@@ -1,14 +1,12 @@
 #include <iostream>
-#include <raylib.h>
+#include "include/raylib.h"
 #include <intrin.h>
-#include <map>
+#include <unordered_map>
 
-using namespace std;
-
-#define GREY CLITERAL(Color){ 30, 30, 30, 255 }
+#define GREY CLITERAL(Color) { 30, 30, 30, 255 }
 
 const unsigned short win_positions[8] { 0x1C0, 0x38, 0x7, 0x124, 0x92, 0x49, 0x111, 0x54 };
-map<unsigned int, unsigned short> ttable;
+std::unordered_map<unsigned int, unsigned short> ttable;
 
 Rectangle sq_tl { 65.0f, 65.0f, 200.0f, 200.0f };
 Rectangle sq_tm { 65.0f, 275.0f, 200.0f, 200.0f };
@@ -38,14 +36,14 @@ void unmakeMove(unsigned int* board, unsigned short move);
 int getBestMoveIndex(int scores[9], int highest_move_index, bool o_turn);
 
 int main() {
-    unsigned int board {0};
-    bool is_engine_turn {1};
-    bool can_play_moves {1};
+    unsigned int board = 0;
+    bool is_engine_turn = 1;
+    bool can_play_moves = 1;
 
     Vector2 mouse_point { 0.0f, 0.0f };
 
-    const short screenWidth = 750;
-    const short screenHeight = 750;
+    const int screenWidth = 750;
+    const int screenHeight = 750;
 
     miniMax(board);
 
@@ -54,20 +52,20 @@ int main() {
     // We load as image first and load textures from the images after resizing
     // because you cannot resize textures.
 
-    Image img_o {LoadImage("o.png")};
-    Image img_x {LoadImage("x.png")};
-    Image img_light_x {LoadImage("x_tprnt.png")};
-    Image img_light_o {LoadImage("o_tprnt.png")};
+    Image img_o = LoadImage("o.png");
+    Image img_x = LoadImage("x.png");
+    Image img_light_x = LoadImage("x_tprnt.png");
+    Image img_light_o = LoadImage("o_tprnt.png");
 
     ImageResize(&img_x, 140, 140);
     ImageResize(&img_o, 140, 140);
     ImageResize(&img_light_x, 140, 140);
     ImageResize(&img_light_o, 140, 140);
 
-    Texture2D x {LoadTextureFromImage(img_x)};
-    Texture2D o {LoadTextureFromImage(img_o)};
-    Texture2D light_x {LoadTextureFromImage(img_light_x)};
-    Texture2D light_o {LoadTextureFromImage(img_light_o)};
+    Texture2D x = LoadTextureFromImage(img_x);
+    Texture2D o = LoadTextureFromImage(img_o);
+    Texture2D light_x = LoadTextureFromImage(img_light_x);
+    Texture2D light_o = LoadTextureFromImage(img_light_o);
 
     UnloadImage(img_x);
     UnloadImage(img_o);
@@ -89,7 +87,7 @@ int main() {
         }
 
         if (can_play_moves) {
-            for (int i {0}; i < 9; i++) {
+            for (int i = 0; i < 9; i++) {
                 if (CheckCollisionPointRec(mouse_point, sq_bounds[i])) {
                     if ( ( ( board & (1U << i) ) == 0 ) && ( board & ( 1U << (i + 9) ) ) == 0  ) { // Square is unoccupied
                         if (IsMouseButtonReleased(MOUSE_BUTTON_LEFT)) {
@@ -125,15 +123,15 @@ int main() {
 
         if (can_play_moves) {
             if (isXWin(board)) {
-                cout << "x won!" << endl;
+                std::cout << "x won!\n";
                 can_play_moves = false;
             }
             else if (isOWin(board)) {
-                cout << "o won!" << endl;
+                std::cout << "o won!\n";
                 can_play_moves = false;
             }
             else if (isDraw(board)) {
-                cout << "draw!" << endl;
+                std::cout << "draw!\n";
                 can_play_moves = false;
             }
         }
@@ -153,7 +151,7 @@ int main() {
 void drawBoard(unsigned int board, Texture2D x, Texture2D o) {
     unsigned long index;
 
-    while (board != 0) {
+    while (board) {
         _BitScanForward(&index, board);
 
         if (index <= 8) {
@@ -172,12 +170,12 @@ int miniMax(unsigned int board) {
      and only using the score of the opponent's best move in move evaluation.
      This implementation also stores the best move into the map ttable. */
 
-    bool o_turn { static_cast<bool>(board >> 18) };
-    unsigned short legal_moves { static_cast<unsigned short>( (~((board | (board >> 9)))) & 0x1FF ) };
+    bool o_turn = static_cast<bool>(board >> 18);
+    unsigned short legal_moves = static_cast<unsigned short>( (~((board | (board >> 9)))) & 0x1FF );
     unsigned short move;
     int scores[9] {0};
     int played_moves[9] {0};
-    int highest_move_index {-1};
+    int highest_move_index = -1;
     unsigned long lsb_index;
     int best_move_index;
 
@@ -260,7 +258,7 @@ void unmakeMove(unsigned int* board, unsigned short move) {
 }
 
 int getBestMoveIndex(int scores[9], int highest_move_index, bool o_turn) {
-    int best_score {0};
+    int best_score;
     int best_move_index;
 
     // We perform different calculations for x and o because
