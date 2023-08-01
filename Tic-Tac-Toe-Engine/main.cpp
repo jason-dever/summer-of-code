@@ -266,7 +266,7 @@ int getBestMoveIndex(int scores[9], int highest_move_index, bool o_turn) {
 
     if (o_turn) {
         best_score = 11;
-        for (int i {0}; i <= highest_move_index; i++) {
+        for (int i = 0; i <= highest_move_index; i++) {
             if (scores[i] < best_score) {
                 best_move_index = i;
                 best_score = scores[i];
@@ -275,7 +275,7 @@ int getBestMoveIndex(int scores[9], int highest_move_index, bool o_turn) {
     }
     else {
         best_score = -11;
-        for (int i {0}; i <= highest_move_index; i++) {
+        for (int i = 0; i <= highest_move_index; i++) {
             if (scores[i] > best_score) {
                 best_move_index = i;
                 best_score = scores[i];
