@@ -22,6 +22,9 @@
 #define shiftDownLeft(x) x >> 7
 #define shiftDownRight(x) x >> 9
 
+#define rookMoves(sq, occupancy) rook_moveboards[_pext_u64(occupancy, rook_relevant_occupancy[sq]) + rook_offsets[sq]]
+#define bishopMoves(sq, occupancy) bishop_moveboards[_pext_u64(occupancy, bishop_relevant_occupancy[sq]) + bishop_offsets[sq]]
+
 enum PawnMovesEnum {captures, pushes};
 
 extern U64 rook_moveboards[102400];

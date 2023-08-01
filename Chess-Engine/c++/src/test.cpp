@@ -3,6 +3,7 @@
 #include <iostream>
 #include <string>
 #include <intrin.h>
+#include "board.h"
 
 using std::cout;
 
@@ -35,14 +36,14 @@ void printBoard(Board board) {
     char pieces[6] = {'p', 'n', 'b', 'r', 'q', 'k'};
 
     for (int i = 63; i >= 0; i--) {
-        if (( board.blackPieces() & (1ULL << i) ) != 0) {
+        if (( board.blackPieces() & (1ULL << i) )) {
             for (int j = pawns; j <= king; j++) {
                 if (board.pieces[black][j] & (1ULL << i)) {
                     line.append(std::string(1, pieces[j]));
                 }
             }
         }
-        else if (( board.whitePieces() & (1ULL << i) ) != 0) {
+        else if (( board.whitePieces() & (1ULL << i) )) {
             for (int j = pawns; j <= king; j++) {
                 if (board.pieces[white][j] & (1ULL << i)) {
                     line.append(std::string(1, pieces[j]-32));

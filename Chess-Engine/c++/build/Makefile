@@ -6,7 +6,7 @@ vpath %.h $(src_dir)
 CXXFLAGS := -Wall -Werror -Wpedantic -O3 -march=znver3
 CXX := g++
 
-objects := main.o board.o movegen.o position.o precompute.o test.o
+objects := main.o board.o position.o precompute.o test.o
 
 engine: $(objects)
 	$(CXX) $(CXXFLAGS) $^ -o $@
@@ -14,10 +14,7 @@ engine: $(objects)
 main.o: main.cpp
 	$(CXX) $(CXXFLAGS) -c $< -o $@
 
-board.o: board.cpp board.h
-	$(CXX) $(CXXFLAGS) -c $< -o $@
-
-movegen.o: movegen.cpp
+board.o: board.cpp board.h movegen.h
 	$(CXX) $(CXXFLAGS) -c $< -o $@
 
 position.o: position.cpp position.h
