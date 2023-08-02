@@ -1,5 +1,6 @@
 #pragma once
 
+#include <iostream>
 #include <string>
 #include "precompute.h"
 #include <vector>
@@ -8,7 +9,7 @@ enum PiecesEnum {pawns, knights, bishops, rooks, queens, king};
 enum ColoursEnum {white, black};
 
 struct Board {
-    bool turn;
+    bool turn = 0;
 
     U64 pieces[2][6] {0};
 
@@ -25,13 +26,23 @@ struct Board {
     inline U64 whitePieces();
     inline U64 blackPieces();
 
+    inline bool makeMove(unsigned int move);
+    inline void unmakeMove(unsigned int move);
+
     private:
-        std::vector<unsigned short> moves;
+        const unsigned short capture_mask = 0x1000;
+        const unsigned short en_passant_mask = 0x2000;
+
+        const unsigned short queen_promo_mask = 0x8000;
+        const unsigned short knight_promo_mask = 0x4000;
+
+        const unsigned short kingcastle_mask = 0x3000;
+        const unsigned short queencastle_mask = 0xF000;
+
+        std::vector<unsigned int> moves;
         bool opponent;
 
         U64 occupancy;
-
-        U64 capture_stack[2] {0};
 
         U64 friendly_occupancy;
         U64 enemy_occupancy;
@@ -40,19 +51,7 @@ struct Board {
         U64 legal_captures;
         U64 legal_pushes;
 
-        U64 horizontal_pins;
-        U64 diagonal_pins;
-
-        U64 moveboard;
-        unsigned short move;
-
-        int from_square;
-        int to_square;
-
         inline U64 sidePieces(bool side);
-
-        inline bool makeMove(unsigned short move);
-        inline void unmakeMove(unsigned short move);
 
         inline void genKingMoves();
         inline void genKnightMoves();
@@ -64,6 +63,194 @@ struct Board {
         inline U64 getEnemyAttackedSquares();
         inline U64 getEnemyCheckingPieces(bool enemy);
 };
+
+inline bool Board::makeMove(unsigned int move) {
+    /* This function returns a bool to differentiate between legal and illegal moves.
+    The move generator will rule out most illegal moves, but some illegal moves
+    including en passant edge cases and movement of pinned pieces are caught here.
+    The playing algorithm will use the boolean returned by this function to
+    determine whether or not to search the move tree .*/
+    //TODO restore/remove other side castle in move 
+    // Full moves will be incremented by 1 if black is moving and nothing if white is moving.
+    full_moves += turn;
+
+    half_moves++;
+
+    if (move == kingcastle_mask) {
+        pieces[turn][king] >>= 2;
+
+        U64 castle_square = pieces[turn][king] >> 1; 
+
+        pieces[turn][rooks] ^= castle_square;
+        pieces[turn][rooks] |= (castle_square << 2);
+
+        castle_squares ^= (0x81 << (56*turn));
+        turn = !turn;
+
+        return 1;
+    }
+    else if (move == queencastle_mask) {
+        pieces[turn][king] <<= 2;
+
+        U64 castle_square = pieces[turn][king] << 2; 
+
+        pieces[turn][rooks] ^= castle_square;
+        pieces[turn][rooks] |= (castle_square >> 3);
+
+        castle_squares ^= (0x81 << (56*turn));
+        turn = !turn;
+
+        return 1;
+    }
+
+    int moving_piece = (move >> 16) & 0x7;
+    U64 from = 1ULL << (move & 0x3F);
+    U64 to = 1ULL << ( (move >> 6) & 0x3F );
+
+    pieces[turn][moving_piece] ^= from;
+
+    if (move & capture_mask) {
+        int captured_piece = (move >> 18) & 0x7;
+
+        pieces[!turn][captured_piece] ^= to;
+
+        half_moves = 0;
+    }
+    else if (move & en_passant_mask) {
+        pieces[opponent][pawns] ^= pawn_moveboards[!turn][pushes][_tzcnt_u64(en_passant_squares)];
+        
+        half_moves = 0;
+    }
+    
+    if (moving_piece == pawns)
+        half_moves = 0;
+
+    if (move & queen_promo_mask) 
+        moving_piece = queens;
+    else if (move & knight_promo_mask) 
+        moving_piece = knights;
+    
+
+    pieces[turn][moving_piece] |= to;
+
+    turn = !turn; 
+
+    if (getEnemyCheckingPieces(opponent)) {
+        unmakeMove(move);
+        return 0;
+    }
+
+    return 1;
+}
+
+inline void Board::unmakeMove(unsigned int move) {
+    turn = !turn;
+    full_moves -= turn;
+    half_moves = move << 21;
+
+    if (move == kingcastle_mask) {
+        U64 castle_square = pieces[turn][king] >> 1;
+
+        pieces[turn][king] <<= 2;
+
+        pieces[turn][rooks] ^= (castle_square << 2);
+        pieces[turn][rooks] |= castle_square;
+
+        castle_squares |= castle_square;
+        return;
+    }
+    else if (move == queencastle_mask) {
+        U64 castle_square = pieces[turn][king] << 2;
+        pieces[turn][king] >>= 2;
+
+        pieces[turn][rooks] ^= (castle_square >> 3);
+        pieces[turn][rooks] |= castle_square;
+
+        castle_squares |= castle_square;
+        return;
+    }
+
+    U64 from = 1ULL << (move & 0x3F);
+    U64 to = 1ULL << ( (move >> 6) & 0x3F );
+
+    if (move & capture_mask)
+        pieces[!turn][move >> 18] |= to;
+
+    else if (move & en_passant_mask) 
+        pieces[!turn][pawns] |= 1ULL << (pawn_moveboards[!turn][pushes][_tzcnt_u64(to)]);
+    
+    if (move & queen_promo_mask) {
+        pieces[turn][pawns] |= from;
+        pieces[turn][queens] ^= to;
+    }
+    else if (move & knight_promo_mask) {
+        pieces[turn][pawns] |= from;
+        pieces[turn][knights] ^= to;
+    }
+    else {
+        int moving_piece = move >> 16;
+
+        pieces[turn][moving_piece] ^= to;
+        pieces[turn][moving_piece] |= from;
+    }
+}
+
+inline U64 Board::getEnemyAttackedSquares() {
+    /* I unroll a for loop here for a little more performance.
+    It looks bad but it saves a few cpu cycles. */
+
+    int sq;
+    U64 opponent_attacked_squares = 0;
+    U64 bitboard;
+    U64 occupancy = (blackPieces() | whitePieces()) ^ pieces[!opponent][king];
+
+    bitboard = pieces[opponent][pawns];
+    while (bitboard) {
+        sq = _tzcnt_u64(bitboard);
+        opponent_attacked_squares |= pawn_moveboards[opponent][captures][sq];
+        flipBit(bitboard, sq);
+    }
+    bitboard = pieces[opponent][knights];
+    while (bitboard) {
+        sq = _tzcnt_u64(bitboard);
+        opponent_attacked_squares |= knight_moveboards[sq];
+        flipBit(bitboard, sq);
+    }
+    bitboard = pieces[opponent][bishops];
+    while (bitboard) {
+        sq = _tzcnt_u64(bitboard);
+        opponent_attacked_squares |= bishopMoves(sq, occupancy);
+        flipBit(bitboard, sq);
+    }
+    bitboard = pieces[opponent][rooks];
+    while (bitboard) {
+        sq = _tzcnt_u64(bitboard);
+        opponent_attacked_squares |= rookMoves(sq, occupancy);
+        flipBit(bitboard, sq);
+    }
+    bitboard = pieces[opponent][queens];
+    while (bitboard) {
+        sq = _tzcnt_u64(bitboard);
+        opponent_attacked_squares |= rookMoves(sq, occupancy) | bishopMoves(sq, occupancy);
+        flipBit(bitboard, sq);
+    }
+    opponent_attacked_squares |= king_moveboards[_tzcnt_u64(pieces[opponent][king])];
+    
+    return opponent_attacked_squares;
+}
+
+inline U64 Board::getEnemyCheckingPieces(bool enemy) {
+    U64 attackers = 0;
+    unsigned int king_square = _tzcnt_u64(pieces[!enemy][king]);
+
+    attackers |= knight_moveboards[king_square] & pieces[enemy][knights];
+    attackers |= pawn_moveboards[!enemy][captures][king_square] & pieces[enemy][pawns];
+    attackers |= bishopMoves(king_square, occupancy) & pieces[enemy][bishops];
+    attackers |= rookMoves(king_square, occupancy) & pieces[enemy][rooks];
+    attackers |= ( bishopMoves(king_square, occupancy) | rookMoves(king_square, occupancy) ) & pieces[enemy][queens];
+
+    return attackers;
+}
 
 inline U64 Board::whitePieces() {
     return (pieces[white][pawns] | pieces[white][knights] | pieces[white][bishops] 
