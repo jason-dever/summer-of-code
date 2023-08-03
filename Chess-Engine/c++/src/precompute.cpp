@@ -5,20 +5,20 @@
 #include <intrin.h>
 #include <immintrin.h>
 
-U64 rook_moveboards[102400];
-U64 bishop_moveboards[5248];
-U64 knight_moveboards[64];
-U64 pawn_moveboards[2][2][64];
-U64 king_moveboards[64];
+uint64_t rook_moveboards[102400];
+uint64_t bishop_moveboards[5248];
+uint64_t knight_moveboards[64];
+uint64_t pawn_moveboards[2][2][64];
+uint64_t king_moveboards[64];
 
-U64 rook_relevant_occupancy[64];
-U64 bishop_relevant_occupancy[64];
+uint64_t rook_relevant_occupancy[64];
+uint64_t bishop_relevant_occupancy[64];
 
-int rook_offsets[64];
-int bishop_offsets[64];
+uint_fast16_t rook_offsets[64];
+uint_fast16_t bishop_offsets[64];
 
-U64 not_A_file = 0x7F7F7F7F7F7F7F7F;
-U64 not_H_file = 0xFEFEFEFEFEFEFEFE;
+uint64_t not_A_file = 0x7F7F7F7F7F7F7F7F;
+uint64_t not_H_file = 0xFEFEFEFEFEFEFEFE;
 
 void initLookupTables() {
     initRookLookups();
@@ -29,10 +29,10 @@ void initLookupTables() {
 }
 
 void initRookLookups() {
-    int offset = 0;
-    U64 subset = 0;
+    uint_fast8_t offset = 0;
+    uint64_t subset = 0;
 
-    for (int sq = 0; sq <= 63; sq++) {
+    for (uint_fast8_t sq = 0; sq <= 63; sq++) {
         rook_relevant_occupancy[sq] = relevantOccupancyRook(sq);
         rook_offsets[sq] = offset;
 
@@ -48,10 +48,10 @@ void initRookLookups() {
 }
 
 void initBishopLookups() {
-    int offset = 0;
-    U64 subset = 0;
+    uint_fast8_t offset = 0;
+    uint64_t subset = 0;
 
-    for (int sq = 0; sq <= 63; sq++) {
+    for (uint_fast8_t sq = 0; sq <= 63; sq++) {
         bishop_relevant_occupancy[sq] = relevantOccupancyBishop(sq);
         bishop_offsets[sq] = offset;
 
@@ -66,11 +66,11 @@ void initBishopLookups() {
 }
 
 void initKnightLookups() {
-    U64 pos;
-    U64 col;
-    U64 moves; 
+    uint64_t pos;
+    uint64_t col;
+    uint64_t moves; 
 
-    for (int sq = 0; sq <= 63; sq++) {
+    for (uint_fast8_t sq = 0; sq <= 63; sq++) {
         moves = 0;
         zeroAndSetBit(pos, sq);
         col = (sq % 8);
@@ -98,12 +98,12 @@ void initKnightLookups() {
 }
 
 void initPawnLookups() {
-    U64 pos;
+    uint64_t pos;
 
-    U64 moves;
-    U64 takes;
+    uint64_t moves;
+    uint64_t takes;
 
-    for (int sq = 8; sq <= 55; sq++) {
+    for (uint_fast8_t sq = 8; sq <= 55; sq++) {
         moves = 0;
         takes = 0;
         zeroAndSetBit(pos, sq);
@@ -118,7 +118,7 @@ void initPawnLookups() {
         pawn_moveboards[white][pushes][sq] = moves;
     }
 
-    for (int sq = 55; sq >= 8; sq--) {
+    for (uint_fast8_t sq = 55; sq >= 8; sq--) {
         moves = 0;
         takes = 0;
         zeroAndSetBit(pos, sq);
@@ -135,10 +135,10 @@ void initPawnLookups() {
 }
 
 void initKingLookups() {
-    U64 moves;
-    U64 pos;
+    uint64_t moves;
+    uint64_t pos;
 
-    for (int sq = 0; sq <= 63; sq++) {
+    for (uint_fast8_t sq = 0; sq <= 63; sq++) {
         moves = 0;
         zeroAndSetBit(pos, sq);
 

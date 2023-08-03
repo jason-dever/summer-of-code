@@ -7,11 +7,12 @@
 
 using std::cout;
 
-void printBitboard(U64 bitboard) {
-    int rank = 8;
+void printBitboard(uint64_t bitboard) {
+    int_fast8_t rank = 8;
+    
     std::string line = std::to_string(rank) + "    ";;
 
-    for (int i = 63; i >= 0; i--) {
+    for (int_fast8_t i = 63; i >= 0; i--) {
         if (bitboard >> i & 0x1) {
             line.append("1 ");
         }
@@ -30,21 +31,21 @@ void printBitboard(U64 bitboard) {
 }
 
 void printBoard(Board board) {
-    int rank = 8;
+    int_fast8_t rank = 8;
     std::string line = std::to_string(rank) + "    ";
     char files[8] = {'a', 'b', 'c', 'd', 'e', 'f', 'g','h'};
     char pieces[6] = {'p', 'n', 'b', 'r', 'q', 'k'};
 
-    for (int i = 63; i >= 0; i--) {
+    for (int_fast8_t i = 63; i >= 0; i--) {
         if (( board.blackPieces() & (1ULL << i) )) {
-            for (int j = pawns; j <= king; j++) {
+            for (int_fast8_t j = pawns; j <= king; j++) {
                 if (board.pieces[black][j] & (1ULL << i)) {
                     line.append(std::string(1, pieces[j]));
                 }
             }
         }
         else if (( board.whitePieces() & (1ULL << i) )) {
-            for (int j = pawns; j <= king; j++) {
+            for (int_fast8_t j = pawns; j <= king; j++) {
                 if (board.pieces[white][j] & (1ULL << i)) {
                     line.append(std::string(1, pieces[j]-32));
                 }
@@ -66,10 +67,9 @@ void printBoard(Board board) {
     std::string castle_rights = "no";
 
     if (board.en_passant_squares) {
-        unsigned long index;
-        _BitScanForward64(&index, board.en_passant_squares);
+        uint_fast8_t index = _tzcnt_u64(board.en_passant_squares);
         char col = files[7-(index%8)];
-        int row = (index/8)+1;
+        int_fast8_t row = (index/8)+1;
         en_passant = col + std::to_string(row);
     }
 

@@ -33,22 +33,22 @@
     Bits 19-21 use the same format as previous to store which
     piece was captured (if capture).
 
-    Bits 21-27: The halfmove clock before the move was made. */
+    Bits 22-28: The halfmove clock before the move was made. */
 
-extern U64 rook_moveboards[102400];
-extern U64 bishop_moveboards[5248];
-extern U64 knight_moveboards[64];
-extern U64 pawn_moveboards[2][2][64];
-extern U64 king_moveboards[64];
+extern uint64_t rook_moveboards[102400];
+extern uint64_t bishop_moveboards[5248];
+extern uint64_t knight_moveboards[64];
+extern uint64_t pawn_moveboards[2][2][64];
+extern uint64_t king_moveboards[64];
 
-const unsigned short capture_mask = 0x1000;
-const unsigned short en_passant_mask = 0x2000;
+const uint16_t capture_mask = 0x1000;
+const uint16_t en_passant_mask = 0x2000;
 
-const unsigned short queen_promo_mask = 0x8000;
-const unsigned short knight_promo_mask = 0x4000;
+const uint16_t queen_promo_mask = 0x8000;
+const uint16_t knight_promo_mask = 0x4000;
 
-const unsigned short kingcastle_mask = 0x3000;
-const unsigned short queencastle_mask = 0xF000;
+const uint16_t kingcastle_mask = 0x3000;
+const uint16_t queencastle_mask = 0xF000;
 
 inline void Board::genMoves() {
     legal_captures = __UINT64_MAX__;
@@ -60,8 +60,8 @@ inline void Board::genMoves() {
     enemy_occupancy = sidePieces(opponent);
     occupancy = friendly_occupancy | enemy_occupancy;
 
-    U64 checking_pieces = getEnemyCheckingPieces(opponent);
-    int num_checking_pieces = __popcnt64(checking_pieces);
+    uint64_t checking_pieces = getEnemyCheckingPieces(opponent);
+    uint_fast8_t num_checking_pieces = __popcnt64(checking_pieces);
 
     genKingMoves();
 
@@ -70,7 +70,7 @@ inline void Board::genMoves() {
         legal_captures = checking_pieces;
         legal_pushes = 0;
 
-        int king_square = _tzcnt_u64(pieces[turn][king]);
+        uint_fast8_t king_square = _tzcnt_u64(pieces[turn][king]);
 
         if (((checker_square%8) == (king_square%8)) || (checker_square/8) == (king_square/8)) {
             legal_pushes = rookMoves(king_square, occupancy) & rookMoves(checker_square, occupancy);
@@ -90,25 +90,25 @@ inline void Board::genMoves() {
     genKnightMoves();
 }
 
-const U64 castling[2][2] = { {0x1, 0x8}, {0x8000000000000000, 0x0100000000000000} };
-const U64 castle_through_squares[2][2] = { {0x7, 0x38}, {0x0700000000000000, 0x3800000000000000} };
+const uint64_t castling[2][2] = { {0x1, 0x8}, {0x8000000000000000, 0x0100000000000000} };
+const uint64_t castle_through_squares[2][2] = { {0x7, 0x38}, {0x0700000000000000, 0x3800000000000000} };
 
 inline void Board::genKingMoves() {
-    int from_square = _tzcnt_u64(pieces[turn][king]);
-    int to_square;
+    uint_fast8_t from_square = _tzcnt_u64(pieces[turn][king]);
+    uint_fast8_t to_square;
 
-    unsigned int move;
+    uint32_t move;
 
-    U64 enemy_attacked_squares = getEnemyAttackedSquares();
+    uint64_t enemy_attacked_squares = getEnemyAttackedSquares();
 
-    U64 moveboard = ( king_moveboards[from_square] 
+    uint64_t moveboard = ( king_moveboards[from_square] 
         & ~( enemy_attacked_squares | friendly_occupancy ) ) & (legal_captures | legal_pushes);
 
     while (moveboard) {
         to_square = _tzcnt_u64(moveboard);
 
         bool move_is_capture = false;
-        int capture_type;
+        uint_fast8_t capture_type;
 
         for (capture_type = pawns; capture_type <= king; capture_type++) {
             if ((1ULL << to_square) & pieces[opponent][capture_type]) {
@@ -135,13 +135,13 @@ inline void Board::genKingMoves() {
 }
 
 inline void Board::genKnightMoves() {
-    U64 friendly_knights = pieces[turn][knights];
+    uint64_t friendly_knights = pieces[turn][knights];
 
-    U64 moveboard;
-    unsigned int move;
+    uint64_t moveboard;
+    uint32_t move;
 
-    int from_square;
-    int to_square;
+    uint_fast8_t from_square;
+    uint_fast8_t to_square;
 
     while (friendly_knights) {
         from_square = _tzcnt_u64(friendly_knights);
@@ -153,7 +153,7 @@ inline void Board::genKnightMoves() {
             to_square = _tzcnt_u64(moveboard);
 
             bool move_is_capture = false;
-            int capture_type;
+            uint_fast8_t capture_type;
 
             for (capture_type = pawns; capture_type <= king; capture_type++) {
                 if ((1ULL << to_square) & pieces[opponent][capture_type]) {
@@ -173,13 +173,13 @@ inline void Board::genKnightMoves() {
 }
 
 inline void Board::genBishopMoves() {
-    U64 friendly_bishops = pieces[turn][bishops];
+    uint64_t friendly_bishops = pieces[turn][bishops];
 
-    U64 moveboard;
-    unsigned int move;
+    uint64_t moveboard;
+    uint32_t move;
 
-    int from_square;
-    int to_square;
+    uint_fast8_t from_square;
+    uint_fast8_t to_square;
 
     while (friendly_bishops) {
         from_square = _tzcnt_u64(friendly_bishops);
@@ -190,7 +190,7 @@ inline void Board::genBishopMoves() {
             to_square = _tzcnt_u64(moveboard);
 
             bool move_is_capture = false;
-            int capture_type;
+            uint_fast8_t capture_type;
 
             for (capture_type = pawns; capture_type <= king; capture_type++) {
                 if ((1ULL << to_square) & pieces[opponent][capture_type]) {
@@ -210,13 +210,13 @@ inline void Board::genBishopMoves() {
 }
 
 inline void Board::genRookMoves() {
-    U64 friendly_rooks = pieces[turn][rooks];
+    uint64_t friendly_rooks = pieces[turn][rooks];
 
-    U64 moveboard;
-    unsigned int move;
+    uint64_t moveboard;
+    uint32_t move;
 
-    int from_square;
-    int to_square;
+    uint_fast8_t from_square;
+    uint_fast8_t to_square;
 
     while (friendly_rooks) {
         from_square = _tzcnt_u64(friendly_rooks);
@@ -227,7 +227,7 @@ inline void Board::genRookMoves() {
             to_square = _tzcnt_u64(moveboard);
 
             bool move_is_capture = false;
-            int capture_type;
+            uint_fast8_t capture_type;
 
             for (capture_type = pawns; capture_type <= king; capture_type++) {
                 if ((1ULL << to_square) & pieces[opponent][capture_type]) {
@@ -247,13 +247,13 @@ inline void Board::genRookMoves() {
 }
 
 inline void Board::genQueenMoves() {
-    U64 friendly_queens = pieces[turn][queens];
+    uint64_t friendly_queens = pieces[turn][queens];
 
-    U64 moveboard;
-    unsigned int move;
+    uint64_t moveboard;
+    uint32_t move;
 
-    int from_square;
-    int to_square;
+    uint_fast8_t from_square;
+    uint_fast8_t to_square;
 
     while (friendly_queens) {
         from_square = _tzcnt_u64(friendly_queens);
@@ -264,7 +264,7 @@ inline void Board::genQueenMoves() {
             to_square = _tzcnt_u64(moveboard);
 
             bool capture = false;
-            int capture_type;
+            uint_fast8_t capture_type;
 
             for (capture_type = pawns; capture_type <= king; capture_type++) {
                 if ((1ULL << to_square) & pieces[opponent][capture_type]) {
@@ -283,24 +283,24 @@ inline void Board::genQueenMoves() {
     }
 }
 
-const U64 promotion_mask = 0xFF000000000000FF;
+const uint64_t promotion_mask = 0xFF000000000000FF;
 
 inline void Board::genPawnMoves() {
-    U64 friendly_pawns = pieces[turn][pawns];
+    uint64_t friendly_pawns = pieces[turn][pawns];
 
     /* This variable saves doing the to_square << 6 operation more than once.
     It's used in this function and not others because in the other movegen functions
     the to_square << 6 operation to place to_square into the move is only performed once. */
-    U64 to_square_in_move;
+    uint64_t to_square_in_move;
 
-    U64 to_square_bitboard;
+    uint64_t to_square_bitboard;
 
-    U64 capture_board;
-    U64 moveboard;
-    unsigned int move;
+    uint64_t capture_board;
+    uint64_t moveboard;
+    uint32_t move;
 
-    int from_square;
-    int to_square;
+    uint_fast8_t from_square;
+    uint_fast8_t to_square;
 
     while (friendly_pawns) {
         from_square = _tzcnt_u64(friendly_pawns);
@@ -317,7 +317,7 @@ inline void Board::genPawnMoves() {
             // If en passant is played this boolean will be false.
             bool move_is_capture;
 
-            int capture_type;
+            uint_fast8_t capture_type;
 
             for (capture_type = pawns; capture_type <= king; capture_type++) {
                 if ((to_square_bitboard) & pieces[opponent][capture_type]) {

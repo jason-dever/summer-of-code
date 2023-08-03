@@ -1,12 +1,13 @@
 #include <string>
+#include <cstdint>
 #include "board.h"
 #include "movegen.h"
 #include "precompute.h"
 
 // This function sucks. Too bad!
 void Board::storeFEN(const std::string FEN) {
-    int sq = 63;
-    int i = 0;
+    int16_t sq = 63;
+    int16_t i = 0;
 
     while (FEN[i] != ' ') {
         if (FEN[i] < 58 && FEN[i] > 48) { // X number of empty squares
@@ -50,10 +51,10 @@ void Board::storeFEN(const std::string FEN) {
 
     i++;
     if (FEN[i] < 105 && FEN[i] > 96) {
-        int col;
+        char col;
         char cols[8] = {'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h'};
 
-        for (int j = 0; j <= 7; j++) {
+        for (int_fast8_t j = 0; j <= 7; j++) {
             if (cols[j] == FEN[i]) {
                 col = j;
             }

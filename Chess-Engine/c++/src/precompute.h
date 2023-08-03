@@ -1,11 +1,9 @@
 #pragma once
 
-
 #include <string>
 #include <iostream>
 #include <immintrin.h>
-
-#define U64 unsigned long long
+#include <cstdint>
 
 #define setBit(mask, index) mask |= 1ULL << index
 #define zeroAndSetBit(mask, index) mask = 1ULL << index
@@ -27,17 +25,17 @@
 
 enum PawnMovesEnum {captures, pushes};
 
-extern U64 rook_moveboards[102400];
-extern U64 bishop_moveboards[5248];
-extern U64 knight_moveboards[64];
-extern U64 pawn_moveboards[2][2][64];
-extern U64 king_moveboards[64];
+extern uint64_t rook_moveboards[102400];
+extern uint64_t bishop_moveboards[5248];
+extern uint64_t knight_moveboards[64];
+extern uint64_t pawn_moveboards[2][2][64];
+extern uint64_t king_moveboards[64];
 
-extern U64 rook_relevant_occupancy[64];
-extern U64 bishop_relevant_occupancy[64];
+extern uint64_t rook_relevant_occupancy[64];
+extern uint64_t bishop_relevant_occupancy[64];
 
-extern int rook_offsets[64];
-extern int bishop_offsets[64];
+extern uint_fast16_t rook_offsets[64];
+extern uint_fast16_t bishop_offsets[64];
 
 void initLookupTables();
 

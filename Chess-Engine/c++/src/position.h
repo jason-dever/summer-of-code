@@ -2,8 +2,8 @@
 #include "board.h"
 #include "precompute.h"
 
-U64 relevantOccupancyRook(int sq);
-U64 relevantOccupancyBishop(int sq);
+uint64_t relevantOccupancyRook(uint_fast8_t sq);
+uint64_t relevantOccupancyBishop(uint_fast8_t sq);
 
-U64 moveboardRook(int sq, U64 blocker_mask);
-U64 moveboardBishop(int sq, U64 blocker_mask);
+uint64_t moveboardRook(uint_fast8_t sq, uint64_t blocker_mask);
+uint64_t moveboardBishop(uint_fast8_t sq, uint64_t blocker_mask);
