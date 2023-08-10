@@ -140,6 +140,20 @@ void Board::printOut() {
             "\n     half moves: " << half_moves << "\n     full moves: " << full_moves << "\n\n";
 }
 
-Board Board::copy() {
-    Board copy;
+void Board::copy(const Board original) {
+    turn = original.turn;
+    
+    castle_squares = original.castle_squares;
+    en_passant_squares = original.en_passant_squares;
+    
+    full_moves = original.full_moves;
+    half_moves = original.half_moves;
+
+    for (int_fast8_t colour = white; colour <= black; colour++) {
+        for (int_fast8_t piece = pawns; piece <= king; piece++) {
+            pieces[colour][piece] = original.pieces[colour][piece];
+        }
+        capture_stack[colour] = original.capture_stack[colour];
+        has_castled[colour] = original.has_castled[colour];
+    }
 }

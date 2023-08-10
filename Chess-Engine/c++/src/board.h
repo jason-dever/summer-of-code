@@ -20,7 +20,7 @@ class Board {
         inline bool makeMove(const uint32_t move);
         inline void unmakeMove(const uint32_t move);
 
-        Board copy();
+        void copy(const Board original);
 
     // private:
         bool turn = 0;
