@@ -1,3 +1,5 @@
+#pragma once
+
 #include "precompute.h"
 #include "board.h"
 #include <intrin.h>
@@ -6,7 +8,7 @@
 /* Moves are encoded using four bytes.
 
     Bits 0-5: from square
-    Bits 6-11: square
+    Bits 6-11: to square
 
     Bits 12-15:
         00 00 quiet move
@@ -19,7 +21,12 @@
         00 11 king castle
         11 11 queen castle
     
-    Bits 16-18:
+    Bit 16: Is an en passant square on the board?
+    Bits 17-20: The en passant square (if en passant)
+    
+    Bits 21-27: The halfmove clock before the move was made
+
+    Bits 28-30:
         000 pawn move
         001 knight move
         010 bishop move
@@ -30,10 +37,8 @@
         These numbers also correspond to the 
         numbers for the pieces declared in PiecesEnum.
     
-    Bits 19-21 use the same format as previous to store which
-    piece was captured (if capture).
-
-    Bits 22-28: The halfmove clock before the move was made. */
+    Bit 31 is unused.
+ */
 
 extern uint64_t rook_moveboards[102400];
 extern uint64_t bishop_moveboards[5248];
@@ -99,7 +104,7 @@ inline void Board::genKingMoves() {
 
     uint32_t move;
 
-    uint64_t enemy_attacked_squares = getEnemyAttackedSquares();
+    uint64_t enemy_attacked_squares = getEnemyAttackedSquares(opponent);
 
     uint64_t moveboard = ( king_moveboards[from_square] 
         & ~( enemy_attacked_squares | friendly_occupancy ) ) & (legal_captures | legal_pushes);
@@ -107,30 +112,24 @@ inline void Board::genKingMoves() {
     while (moveboard) {
         to_square = _tzcnt_u64(moveboard);
 
-        bool move_is_capture = false;
-        uint_fast8_t capture_type;
-
-        for (capture_type = pawns; capture_type <= king; capture_type++) {
-            if ((1ULL << to_square) & pieces[opponent][capture_type]) {
-                move_is_capture = true;
-                break;
-            }
-        }
+        bool move_is_capture = enemy_occupancy & (1ULL << to_square); 
 
         /* If the to square is occupied, the move will be flagged as a capture. 
         If not, it's a quiet move. */
         move = (from_square) | (to_square << 6) | 
-            ( move_is_capture << 12 ) | (king << 16) | (capture_type << 19) | (half_moves << 21);
+            ( move_is_capture << 12 ) | (king << 16) | (half_moves << 21);
             
         moves.push_back(move);
         flipBit(moveboard, to_square);
     }
 
-    if ( castle_squares & castling[turn][0] && !((enemy_attacked_squares | occupancy) & castle_through_squares[turn][0]) ) {
-        moves.push_back(kingcastle_mask);
-    }
-    if ( castle_squares & castling[turn][1] && !((enemy_attacked_squares | occupancy) & castle_through_squares[turn][1]) ) {
-        moves.push_back(queencastle_mask);
+    if (!has_castled[turn]) {
+        if ( castle_squares & castling[turn][0] && !((enemy_attacked_squares | occupancy) & castle_through_squares[turn][0]) ) {
+            moves.push_back(kingcastle_mask | (half_moves << 21));
+        }
+        if ( castle_squares & castling[turn][1] && !((enemy_attacked_squares | occupancy) & castle_through_squares[turn][1]) ) {
+            moves.push_back(queencastle_mask | (half_moves << 21));
+        }
     }
 }
 
@@ -152,18 +151,10 @@ inline void Board::genKnightMoves() {
         while (moveboard) {
             to_square = _tzcnt_u64(moveboard);
 
-            bool move_is_capture = false;
-            uint_fast8_t capture_type;
-
-            for (capture_type = pawns; capture_type <= king; capture_type++) {
-                if ((1ULL << to_square) & pieces[opponent][capture_type]) {
-                    move_is_capture = true;
-                    break;
-                }
-            }
+            bool move_is_capture = enemy_occupancy & (1ULL << to_square); 
 
             move = (from_square) | (to_square << 6) 
-                | ( move_is_capture << 12 ) | (knights << 16) | (capture_type << 19) | (half_moves << 21);
+                | ( move_is_capture << 12 ) | (knights << 16) | (half_moves << 21);
             
             moves.push_back(move);
             flipBit(moveboard, to_square);
@@ -189,18 +180,10 @@ inline void Board::genBishopMoves() {
         while (moveboard) {
             to_square = _tzcnt_u64(moveboard);
 
-            bool move_is_capture = false;
-            uint_fast8_t capture_type;
-
-            for (capture_type = pawns; capture_type <= king; capture_type++) {
-                if ((1ULL << to_square) & pieces[opponent][capture_type]) {
-                    move_is_capture = true;
-                    break;
-                }
-            }
+            bool move_is_capture = enemy_occupancy & (1ULL << to_square); 
 
             move = (from_square) | (to_square << 6) 
-                | ( move_is_capture << 12 ) | (bishops << 16) | (capture_type << 19) | (half_moves << 21);
+                | ( move_is_capture << 12 ) | (bishops << 16) | (half_moves << 21);
             
             moves.push_back(move);
             flipBit(moveboard, to_square);
@@ -226,18 +209,10 @@ inline void Board::genRookMoves() {
         while (moveboard) {
             to_square = _tzcnt_u64(moveboard);
 
-            bool move_is_capture = false;
-            uint_fast8_t capture_type;
-
-            for (capture_type = pawns; capture_type <= king; capture_type++) {
-                if ((1ULL << to_square) & pieces[opponent][capture_type]) {
-                    move_is_capture = true;
-                    break;
-                }
-            }
+            bool move_is_capture = enemy_occupancy & (1ULL << to_square); 
 
             move = (from_square) | (to_square << 6) 
-                | ( move_is_capture << 12 ) | (rooks << 16) | (capture_type << 19) | (half_moves << 21);
+                | ( move_is_capture << 12 ) | (rooks << 16) | (half_moves << 21);
             
             moves.push_back(move);
             flipBit(moveboard, to_square);
@@ -263,18 +238,10 @@ inline void Board::genQueenMoves() {
         while (moveboard) {
             to_square = _tzcnt_u64(moveboard);
 
-            bool capture = false;
-            uint_fast8_t capture_type;
-
-            for (capture_type = pawns; capture_type <= king; capture_type++) {
-                if ((1ULL << to_square) & pieces[opponent][capture_type]) {
-                    capture = true;
-                    break;
-                }
-            }
+            bool move_is_capture = enemy_occupancy & (1ULL << to_square); 
 
             move = (from_square) | (to_square << 6) 
-                | ( capture << 12 ) | (queens << 16) | (capture_type << 19) | (half_moves << 21);
+                | ( move_is_capture << 12 ) | (queens << 16) | (half_moves << 21);
             
             moves.push_back(move);
             flipBit(moveboard, to_square);
@@ -291,7 +258,7 @@ inline void Board::genPawnMoves() {
     /* This variable saves doing the to_square << 6 operation more than once.
     It's used in this function and not others because in the other movegen functions
     the to_square << 6 operation to place to_square into the move is only performed once. */
-    uint64_t to_square_in_move;
+    uint_fast32_t to_square_in_move;
 
     uint64_t to_square_bitboard;
 
@@ -315,23 +282,14 @@ inline void Board::genPawnMoves() {
             to_square_in_move = to_square << 6;
 
             // If en passant is played this boolean will be false.
-            bool move_is_capture;
-
-            uint_fast8_t capture_type;
-
-            for (capture_type = pawns; capture_type <= king; capture_type++) {
-                if ((to_square_bitboard) & pieces[opponent][capture_type]) {
-                    move_is_capture = true;
-                    break;
-                }
-            }
+            bool move_is_capture = enemy_occupancy & (1ULL << to_square); 
 
             /* If to square & promotion_mask is > 0 then the move is a promotion.
             We need to make two moves; one for knight promotion and one for queen promotion.
             * This might mess with perft numbers because we don't generate moves for rook/bishop promotions. */
             if ( to_square_bitboard & promotion_mask ) {
                 move = from_square | to_square_in_move | (capture_mask | queen_promo_mask)
-                    | (capture_type << 19) | (half_moves << 21);
+                    | (half_moves << 21);
 
                 moves.push_back(move);
 
@@ -344,7 +302,7 @@ inline void Board::genPawnMoves() {
                 bool move_is_en_passant = ( _pext_u64(en_passant_squares, to_square_bitboard) );
 
                 move = (from_square) | to_square_in_move | (move_is_capture << 12) 
-                    | (move_is_en_passant << 13) | (capture_type << 19) | (half_moves << 21);
+                    | (move_is_en_passant << 13) | (half_moves << 21);
 
                 moves.push_back(move);
             }

@@ -11,7 +11,7 @@ objects := main.o board.o position.o precompute.o test.o
 engine: $(objects)
 	$(CXX) $(CXXFLAGS) $^ -o $@
 
-main.o: main.cpp
+main.o: main.cpp board.h
 	$(CXX) $(CXXFLAGS) -c $< -o $@
 
 board.o: board.cpp board.h movegen.h

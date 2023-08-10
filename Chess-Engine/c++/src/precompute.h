@@ -22,6 +22,7 @@
 
 #define rookMoves(sq, occupancy) rook_moveboards[_pext_u64(occupancy, rook_relevant_occupancy[sq]) + rook_offsets[sq]]
 #define bishopMoves(sq, occupancy) bishop_moveboards[_pext_u64(occupancy, bishop_relevant_occupancy[sq]) + bishop_offsets[sq]]
+#define queenMoves(sq, occupancy) (rookMoves(sq, occupancy) | bishopMoves(sq, occupancy))
 
 enum PawnMovesEnum {captures, pushes};
 
@@ -34,7 +35,7 @@ extern uint64_t king_moveboards[64];
 extern uint64_t rook_relevant_occupancy[64];
 extern uint64_t bishop_relevant_occupancy[64];
 
-extern uint_fast16_t rook_offsets[64];
+extern uint_fast32_t rook_offsets[64];
 extern uint_fast16_t bishop_offsets[64];
 
 void initLookupTables();

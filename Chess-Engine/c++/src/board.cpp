@@ -78,3 +78,68 @@ void Board::storeFEN(const std::string FEN) {
 
     full_moves = atoi(FEN.substr(i).c_str());
 }
+
+void Board::printOut() {
+    int_fast8_t rank = 8;
+    std::string line = std::to_string(rank) + "    ";
+    char files[8] = {'a', 'b', 'c', 'd', 'e', 'f', 'g','h'};
+    char piece_characters[6] = {'p', 'n', 'b', 'r', 'q', 'k'};
+
+    for (int_fast8_t i = 63; i >= 0; i--) {
+        if (( blackPieces() & (1ULL << i) )) {
+            for (int_fast8_t j = pawns; j <= king; j++) {
+                if (pieces[black][j] & (1ULL << i)) {
+                    line.append(std::string(1, piece_characters[j]));
+                }
+            }
+        }
+        else if (( whitePieces() & (1ULL << i) )) {
+            for (int_fast8_t j = pawns; j <= king; j++) {
+                if (pieces[white][j] & (1ULL << i)) {
+                    line.append(std::string(1, piece_characters[j]-32));
+                }
+            }
+        }
+        else {
+            line.append(".");
+        }
+        line.append(" ");
+
+        if (i%8 == 0) {
+            std::cout << line << "\n";
+            rank--;
+            line = std::to_string(rank) + "    ";
+        }
+    }
+    std::string whose_turn = (turn) ? "black" : "white";
+    std::string en_passant = "no";
+    std::string castle_rights = "no";
+
+    if (en_passant_squares) {
+        uint_fast8_t index = _tzcnt_u64(en_passant_squares);
+        char col = files[7-(index%8)];
+        int_fast8_t row = (index/8)+1;
+        en_passant = col + std::to_string(row);
+    }
+
+    if (castle_squares) {
+        castle_rights = "";
+        if (castle_squares & 0x1) castle_rights.append("K");
+        if ((castle_squares >> 7) & 0x1) castle_rights.append("Q");
+        if ((castle_squares >> 56) & 0x1) castle_rights.append("k");
+        if (castle_squares >> 63) castle_rights.append("q");
+    }
+
+    if (has_castled[white])
+        castle_rights.append(", white has castled");
+    if (has_castled[black])
+        castle_rights.append(", black has castled");
+
+    std::cout << "\n     a b c d e f g h\n\n" << "     Turn: " << whose_turn << 
+            "\n     En passant: " << en_passant << "\n     Castle rights: " << castle_rights << 
+            "\n     half moves: " << half_moves << "\n     full moves: " << full_moves << "\n\n";
+}
+
+Board Board::copy() {
+    Board copy;
+}
