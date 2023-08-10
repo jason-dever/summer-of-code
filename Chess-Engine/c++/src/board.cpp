@@ -140,7 +140,7 @@ void Board::printOut() {
             "\n     half moves: " << half_moves << "\n     full moves: " << full_moves << "\n\n";
 }
 
-void Board::copy(const Board original) {
+void Board::operator=(const Board original) {
     turn = original.turn;
     
     castle_squares = original.castle_squares;
