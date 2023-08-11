@@ -157,3 +157,23 @@ void Board::operator=(const Board original) {
         has_castled[colour] = original.has_castled[colour];
     }
 }
+
+bool Board::operator==(const Board other_board) {
+    bool boards_are_different = false;
+
+    boards_are_different |= (turn != other_board.turn)
+                         | (castle_squares != other_board.castle_squares)
+                         | (en_passant_squares != other_board.en_passant_squares)
+                         | (full_moves != other_board.full_moves)
+                         | (half_moves != other_board.half_moves);
+
+    for (int_fast8_t colour = white; colour <= black; colour++) {
+        for (int_fast8_t piece = pawns; piece <= king; piece++) {
+            boards_are_different |= (pieces[colour][piece] != other_board.pieces[colour][piece]);    
+        }
+        boards_are_different |= (has_castled[colour] != other_board.has_castled[colour])
+                             | (capture_stack[colour] != other_board.capture_stack[colour]);
+    }
+    
+    return !boards_are_different;
+}

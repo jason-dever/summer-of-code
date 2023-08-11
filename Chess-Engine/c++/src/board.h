@@ -20,7 +20,8 @@ class Board {
         inline bool makeMove(const uint32_t move);
         inline void unmakeMove(const uint32_t move);
 
-        void copy(const Board original);
+        void operator=(const Board original);
+        bool operator==(const Board other_board);
 
     // private:
         bool turn = 0;
