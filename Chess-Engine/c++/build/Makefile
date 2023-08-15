@@ -27,6 +27,6 @@ test.o: test.cpp test.h
 	$(CXX) $(CXXFLAGS) -c $< -o $@
 
 clean:
-	rm *.o *.exe
+	rm *.o engine
 
 .PHONY: clean
