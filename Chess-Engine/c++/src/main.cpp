@@ -12,6 +12,7 @@
 int main() {
     Board board;
     // board.storeFEN("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq -- 0 0"); // Starting position
+
     board.storeFEN("rn1qkbnr/ppp1pppp/8/8/6b1/3P2P1/PPP2PpP/RNBQK2R b KQkq - 0 8");
     board.printOut();
     
