@@ -1,8 +1,7 @@
-#include "precompute.h"
-#include "board.h"
-#include "position.h"
+#include "precompute.hpp"
+#include "board.hpp"
+#include "position.hpp"
 #include <cmath>
-#include <intrin.h>
 #include <immintrin.h>
 
 uint64_t rook_moveboards[102400];
@@ -43,7 +42,7 @@ void initRookLookups() {
             subset = (subset - rook_relevant_occupancy[sq]) & rook_relevant_occupancy[sq];
         } while (subset);
 
-        offset += pow ( 2.0, __popcnt64(rook_relevant_occupancy[sq]) );
+        offset += pow ( 2.0, _popcnt64(rook_relevant_occupancy[sq]) );
     }
 }
 
@@ -61,7 +60,7 @@ void initBishopLookups() {
             subset = (subset - bishop_relevant_occupancy[sq]) & bishop_relevant_occupancy[sq];
         } while (subset);
 
-        offset += pow ( 2.0, __popcnt64(bishop_relevant_occupancy[sq]) );
+        offset += pow ( 2.0, _popcnt64(bishop_relevant_occupancy[sq]) );
     }
 }
 

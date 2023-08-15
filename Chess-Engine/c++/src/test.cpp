@@ -1,9 +1,8 @@
-#include "test.h"
-#include "precompute.h"
+#include "test.hpp"
+#include "precompute.hpp"
 #include <iostream>
 #include <string>
-#include <intrin.h>
-#include "board.h"
+#include "board.hpp"
 
 using std::cout;
 using std::clog;

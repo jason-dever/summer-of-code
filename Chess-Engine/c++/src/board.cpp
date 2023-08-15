@@ -1,8 +1,8 @@
 #include <string>
 #include <cstdint>
-#include "board.h"
-#include "movegen.h"
-#include "precompute.h"
+#include "board.hpp"
+#include "movegen.hpp"
+#include "precompute.hpp"
 
 // This function sucks. Too bad!
 void Board::storeFEN(const std::string FEN) {

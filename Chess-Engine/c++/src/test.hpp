@@ -1,7 +1,7 @@
 #pragma once
 
-#include "precompute.h"
-#include "board.h"
+#include "precompute.hpp"
+#include "board.hpp"
 
 void printBitboard(uint64_t bitboard);
 

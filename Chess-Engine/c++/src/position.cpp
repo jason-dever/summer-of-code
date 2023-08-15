@@ -1,6 +1,6 @@
-#include "position.h"
-#include "precompute.h"
-#include "test.h"
+#include "position.hpp"
+#include "precompute.hpp"
+#include "test.hpp"
 #include <cstdint>
 #include <iostream>
 

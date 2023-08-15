@@ -1,8 +1,7 @@
 #pragma once
 
-#include "precompute.h"
-#include "board.h"
-#include <intrin.h>
+#include "precompute.hpp"
+#include "board.hpp"
 #include <immintrin.h>
 
 /* Moves are encoded using four bytes.
@@ -66,7 +65,7 @@ inline void Board::genMoves() {
     occupancy = friendly_occupancy | enemy_occupancy;
 
     uint64_t checking_pieces = getEnemyCheckingPieces(opponent);
-    uint_fast8_t num_checking_pieces = __popcnt64(checking_pieces);
+    uint_fast8_t num_checking_pieces = _popcnt64(checking_pieces);
 
     genKingMoves();
 

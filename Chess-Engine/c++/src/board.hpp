@@ -2,9 +2,9 @@
 
 #include <iostream>
 #include <string>
-#include "precompute.h"
+#include "precompute.hpp"
 #include <vector>
-#include "test.h"
+#include "test.hpp"
 
 enum PiecesEnum { pawns, knights, bishops, rooks, queens, king };
 enum ColoursEnum { white, black };

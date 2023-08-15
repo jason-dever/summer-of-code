@@ -1,7 +1,7 @@
 #pragma once
 
-#include "board.h"
-#include "precompute.h"
+#include "board.hpp"
+#include "precompute.hpp"
 
 uint64_t relevantOccupancyRook(int_fast8_t sq);
 uint64_t relevantOccupancyBishop(int_fast8_t sq);

@@ -1,9 +1,9 @@
 #include <iostream>
-#include "board.h"
-#include "position.h"
-#include "precompute.h"
-#include "test.h"
-#include "movegen.h"
+#include "board.hpp"
+#include "position.hpp"
+#include "precompute.hpp"
+#include "test.hpp"
+#include "movegen.hpp"
 #include <iostream>
 #include <immintrin.h>
 
