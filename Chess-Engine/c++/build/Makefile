@@ -27,9 +27,6 @@ test.o: test.cpp test.h
 	$(CXX) $(CXXFLAGS) -c $< -o $@
 
 clean:
-	del /Q *.o
+	rm *.o *.exe
 
-cleaner:
-	del /Q *.o *.exe
-
-.PHONY: clean cleaner
+.PHONY: clean
