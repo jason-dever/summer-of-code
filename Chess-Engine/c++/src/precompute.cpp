@@ -16,8 +16,8 @@ uint64_t bishop_relevant_occupancy[64];
 uint_fast32_t rook_offsets[64];
 uint_fast16_t bishop_offsets[64];
 
-uint64_t not_A_file = 0x7F7F7F7F7F7F7F7F;
-uint64_t not_H_file = 0xFEFEFEFEFEFEFEFE;
+uint64_t not_A_file = 0x7f7f7f7f7f7f7f7f;
+uint64_t not_H_file = 0xfefefefefefefefe;
 
 void initLookupTables() {
     initRookLookups();

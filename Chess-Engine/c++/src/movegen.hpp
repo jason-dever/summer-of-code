@@ -25,18 +25,13 @@
     
     Bits 21-27: The halfmove clock before the move was made
 
-    Bits 28-30:
-        000 pawn move
-        001 knight move
-        010 bishop move
-        011 rook move
-        100 queen move
-        101 king move
+    Bits 28-31:
+        Legal castle squares; in unmake, castle_squares will be set to
+        a PDEP of these bits with a mask of the four potential castle squares.
 
-        These numbers also correspond to the 
-        numbers for the pieces declared in PiecesEnum.
-    
-    Bit 31 is unused.
+        1111    0101    0010
+        qkQK     k k      q
+         
  */
 
 extern uint64_t rook_moveboards[102400];
@@ -52,7 +47,9 @@ const uint16_t queen_promo_mask = 0x8000;
 const uint16_t knight_promo_mask = 0x4000;
 
 const uint16_t kingcastle_mask = 0x3000;
-const uint16_t queencastle_mask = 0xF000;
+const uint16_t queencastle_mask = 0xf000;
+
+//TODO write movegen to compensate for new move structure
 
 inline void Board::genMoves() {
     legal_captures = __UINT64_MAX__;
@@ -122,14 +119,10 @@ inline void Board::genKingMoves() {
         flipBit(moveboard, to_square);
     }
 
-    if (!has_castled[turn]) {
-        if ( castle_squares & castling[turn][0] && !((enemy_attacked_squares | occupancy) & castle_through_squares[turn][0]) ) {
-            moves.push_back(kingcastle_mask | (half_moves << 21));
-        }
-        if ( castle_squares & castling[turn][1] && !((enemy_attacked_squares | occupancy) & castle_through_squares[turn][1]) ) {
-            moves.push_back(queencastle_mask | (half_moves << 21));
-        }
-    }
+    if ( castle_squares & castling[turn][0] && !((enemy_attacked_squares | occupancy) & castle_through_squares[turn][0]) )
+        moves.push_back(kingcastle_mask | (half_moves << 21));
+    if ( castle_squares & castling[turn][1] && !((enemy_attacked_squares | occupancy) & castle_through_squares[turn][1]) )
+        moves.push_back(queencastle_mask | (half_moves << 21));
 }
 
 inline void Board::genKnightMoves() {
@@ -249,7 +242,7 @@ inline void Board::genQueenMoves() {
     }
 }
 
-const uint64_t promotion_mask = 0xFF000000000000FF;
+const uint64_t promotion_mask = 0xff000000000000ff;
 
 inline void Board::genPawnMoves() {
     uint64_t friendly_pawns = pieces[turn][pawns];

@@ -10,8 +10,10 @@ enum PiecesEnum { pawns, knights, bishops, rooks, queens, king };
 enum ColoursEnum { white, black };
 
 class Board {
+
     public:
-    
+        Board(const std::string FEN);
+
         void storeFEN(const std::string FEN);
         void printOut();
 
@@ -25,7 +27,7 @@ class Board {
 
     // private:
         bool turn = 0;
-
+        
         uint64_t pieces[2][6] { 0 };
 
         uint64_t castle_squares = 0;
@@ -41,15 +43,15 @@ class Board {
         const uint_fast16_t knight_promo_mask = 0x4000;
 
         const uint_fast16_t kingcastle_mask = 0x3000;
-        const uint_fast16_t queencastle_mask = 0xF000;
+        const uint_fast16_t queencastle_mask = 0xf000;
+
+        const uint64_t potential_castle_squares = 0x8100000000000081;
 
         std::vector<uint32_t> moves;
 
         uint64_t capture_stack[2] { 0 };
 
         bool opponent;
-
-        bool has_castled[2] { 0 };
 
         uint64_t occupancy;
 
@@ -85,10 +87,11 @@ inline bool Board::makeMove(const uint32_t move) {
     // Full moves will be incremented by 1 if black is moving and nothing if white is moving.
     full_moves += turn;
     half_moves++;
+
     opponent = !turn;
+    en_passant_squares = 0;
 
     if ((move & queencastle_mask) == queencastle_mask) {
-
         pieces[turn][king] <<= 2;
 
         uint64_t castle_square = pieces[turn][king] << 2; 
@@ -98,12 +101,10 @@ inline bool Board::makeMove(const uint32_t move) {
 
 
         castle_squares ^= castle_square;
-        has_castled[turn] = true;
         turn = opponent;
         return 1;
     }
     else if ((move & kingcastle_mask) == kingcastle_mask) {
-        
         pieces[turn][king] >>= 2;
 
         uint64_t castle_square = pieces[turn][king] >> 1; 
@@ -113,26 +114,31 @@ inline bool Board::makeMove(const uint32_t move) {
 
 
         castle_squares ^= castle_square;
-        has_castled[turn] = true;
         turn = opponent;
         return 1;
     }
 
-    uint_fast8_t moving_piece = (move >> 28);
-    uint64_t from = 1ULL << (move & 0x3F);
-    uint64_t to = 1ULL << ( (move >> 6) & 0x3F );
+    uint_fast8_t moving_piece;
+    uint64_t from = 1ULL << (move & 0x3f);
+    uint64_t to = 1ULL << ( (move >> 6) & 0x3f );
+
+    for (moving_piece = pawns; moving_piece <= king; moving_piece++) {
+        if (from & pieces[turn][moving_piece]) break;    
+    }
+
+    castle_squares &= ~from;
+    castle_squares ^= (0x81ULL << (56*turn))*(moving_piece == king); 
 
     pieces[turn][moving_piece] ^= from;
-
+    
     if (move & capture_mask) {
         uint_fast8_t captured_piece;
 
         for (captured_piece = pawns; captured_piece < king; captured_piece++) {
-            if (to & pieces[opponent][captured_piece])
-                break;
+            if (to & pieces[opponent][captured_piece]) break;
         }
 
-        pieces[!turn][captured_piece] ^= to;
+        pieces[opponent][captured_piece] ^= to;
 
         capture_stack[turn] <<= 3;
         capture_stack[turn] |= captured_piece;
@@ -162,9 +168,10 @@ inline bool Board::makeMove(const uint32_t move) {
 
     turn = opponent; 
 
-    if (getEnemyCheckingPieces(turn)) {
+    if (getEnemyCheckingPieces(opponent)) {
         std::cout << "bad move\n";
-        unmakeMove(move);
+        std::cout << getEnemyCheckingPieces(opponent) << "\n";
+        // unmakeMove(move);
         return 0;
     }
 
@@ -174,12 +181,13 @@ inline bool Board::makeMove(const uint32_t move) {
 inline void Board::unmakeMove(const uint32_t move) {
     turn = !turn;
     full_moves -= turn;
-    half_moves = (move >> 21) & 0x7F;
+    half_moves = (move >> 21) & 0x7f;
 
     int_fast16_t possible_en_passant_squares[16] { 16, 17, 18, 19, 20, 21, 22, 23,
                                                    40, 41, 42, 43, 44, 45, 46, 47 };
 
-    en_passant_squares = static_cast<uint64_t>((move >> 16) & 1) << possible_en_passant_squares[(move >> 17) & 0xF];
+    en_passant_squares = static_cast<uint64_t>((move >> 16) & 1) << possible_en_passant_squares[(move >> 17) & 0xf];
+    castle_squares = _pdep_u64(move >> 28, potential_castle_squares);
 
     if ((move & queencastle_mask) == queencastle_mask) {
         uint64_t castle_square = pieces[turn][king] << 2;
@@ -189,7 +197,6 @@ inline void Board::unmakeMove(const uint32_t move) {
         pieces[turn][rooks] |= castle_square;
 
         castle_squares |= castle_square;
-        has_castled[turn] = false;
         return;
     }
     else if ((move & kingcastle_mask) == kingcastle_mask) {
@@ -201,12 +208,11 @@ inline void Board::unmakeMove(const uint32_t move) {
         pieces[turn][rooks] |= castle_square;
 
         castle_squares |= castle_square;
-        has_castled[turn] = false;
         return;
     }
 
-    uint64_t from = 1ULL << (move & 0x3F);
-    uint64_t to = 1ULL << ( (move >> 6) & 0x3F );
+    uint64_t from = 1ULL << (move & 0x3f);
+    uint64_t to = 1ULL << ( (move >> 6) & 0x3f );
 
     if (move & capture_mask) {
         pieces[!turn][capture_stack[turn] & 0x7] |= to;
@@ -226,8 +232,11 @@ inline void Board::unmakeMove(const uint32_t move) {
         pieces[turn][knights] ^= to;
     }
     else {
-        uint_fast8_t moving_piece = move >> 28;
+        uint_fast16_t moving_piece;
 
+        for (moving_piece = pawns; moving_piece <= king; moving_piece++) {
+            if (to & pieces[turn][moving_piece]) break;    
+        }
         pieces[turn][moving_piece] ^= to;
         pieces[turn][moving_piece] |= from;
     }

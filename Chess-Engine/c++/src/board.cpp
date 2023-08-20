@@ -4,6 +4,10 @@
 #include "movegen.hpp"
 #include "precompute.hpp"
 
+Board::Board(const std::string FEN) {
+    storeFEN(FEN);
+}
+
 // This function sucks. Too bad!
 void Board::storeFEN(const std::string FEN) {
     int16_t sq = 63;
@@ -124,16 +128,11 @@ void Board::printOut() {
 
     if (castle_squares) {
         castle_rights = "";
-        if (castle_squares & 0x1) castle_rights.append("K");
-        if ((castle_squares >> 7) & 0x1) castle_rights.append("Q");
-        if ((castle_squares >> 56) & 0x1) castle_rights.append("k");
+        if (castle_squares & 1) castle_rights.append("K");
+        if ((castle_squares >> 7) & 1) castle_rights.append("Q");
+        if ((castle_squares >> 56) & 1) castle_rights.append("k");
         if (castle_squares >> 63) castle_rights.append("q");
     }
-
-    if (has_castled[white])
-        castle_rights.append(", white has castled");
-    if (has_castled[black])
-        castle_rights.append(", black has castled");
 
     std::cout << "\n     a b c d e f g h\n\n" << "     Turn: " << whose_turn << 
             "\n     En passant: " << en_passant << "\n     Castle rights: " << castle_rights << 
@@ -154,26 +153,24 @@ void Board::operator=(const Board original) {
             pieces[colour][piece] = original.pieces[colour][piece];
         }
         capture_stack[colour] = original.capture_stack[colour];
-        has_castled[colour] = original.has_castled[colour];
     }
 }
 
 bool Board::operator==(const Board other_board) {
     bool boards_are_different = false;
 
-    boards_are_different |= (turn != other_board.turn)
-                         | (castle_squares != other_board.castle_squares)
-                         | (en_passant_squares != other_board.en_passant_squares)
-                         | (full_moves != other_board.full_moves)
-                         | (half_moves != other_board.half_moves);
+    boards_are_different |= (turn != other_board.turn);
+    boards_are_different |= (castle_squares != other_board.castle_squares);
+    boards_are_different |= (en_passant_squares != other_board.en_passant_squares);
+    boards_are_different |= (full_moves != other_board.full_moves);
+    boards_are_different |= (half_moves != other_board.half_moves);
 
     for (int_fast8_t colour = white; colour <= black; colour++) {
         for (int_fast8_t piece = pawns; piece <= king; piece++) {
             boards_are_different |= (pieces[colour][piece] != other_board.pieces[colour][piece]);    
         }
-        boards_are_different |= (has_castled[colour] != other_board.has_castled[colour])
-                             | (capture_stack[colour] != other_board.capture_stack[colour]);
+        boards_are_different |= (capture_stack[colour] != other_board.capture_stack[colour]);
     }
-    
+    std::cout << "\n";
     return !boards_are_different;
 }

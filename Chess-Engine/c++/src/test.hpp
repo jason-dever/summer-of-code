@@ -5,7 +5,17 @@
 
 void printBitboard(uint64_t bitboard);
 
-class Test {
-    void makeUnmakeTest();
+namespace Test {
+    void makeUnmake();
+
+    void quietMoves();
+    void captures();
+    
+    void castling();
+
+    void enPassant();
+    void pawnPromotions();
+    void pawnPushes();
+
     void perft();
-};
+}
