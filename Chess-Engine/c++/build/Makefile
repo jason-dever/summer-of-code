@@ -23,7 +23,7 @@ position.o: position.cpp position.hpp
 precompute.o: precompute.cpp precompute.hpp
 	$(CXX) $(CXXFLAGS) -c $< -o $@
 
-test.o: test.cpp test.hpp
+test.o: test.cpp test.hpp board.hpp
 	$(CXX) $(CXXFLAGS) -c $< -o $@
 
 clean:
