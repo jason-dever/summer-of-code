@@ -4,7 +4,7 @@ vpath %.cpp $(src_dir)
 vpath %.hpp $(src_dir)
 
 CXX := g++
-CXXFLAGS := -Wall -Werror -Wpedantic -O0 -march=znver3
+CXXFLAGS := -Wall -Wpedantic -O0 -march=znver3
 
 objects := main.o board.o position.o precompute.o test.o
 
