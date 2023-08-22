@@ -65,19 +65,25 @@ void Test::testMakeQuietMoves() {
                         0xf06007ad, 0xf0800107, 0xd0a00d3b };
     
     
-    std::string results[2] { " pass\n", " fail\n" };
     bool test_failed = false;
     bool move_failed;
 
+    int avg_time = 0;
+
     for (int i = 0; i <= 5; i++) {
         board = positions[i]; 
+
+        auto start = std::chrono::high_resolution_clock::now();
         board.makeMove(moves[i]);
+        auto stop = std::chrono::high_resolution_clock::now();
+
+        avg_time += std::chrono::duration_cast<std::chrono::nanoseconds>(stop-start).count();
 
         move_failed = !(board == positions[i+1]);
         test_failed |= move_failed;
 
         if (move_failed) {
-            clog << "Make quiet move " << i << results[1];
+            clog << "Make quiet move " << i << "fail\n";
 
             clog << "Expected:\n";
             positions[i+1].printOut();
@@ -87,11 +93,11 @@ void Test::testMakeQuietMoves() {
         }
     }
 
-    clog << "Make quiet move" << results[test_failed];
+    std::string results[2] { " pass", " fail" };
+    clog << "Make quiet move" << results[test_failed] << ", Avg overhead: " << avg_time/6 << "ns\n";
 }
 
 void Test::testUnmakeQuietMoves() {
-
     Board board;
     Board positions[7] { 
         Board("r2qkbnr/ppp4p/2npbp2/3Np1p1/2BPP2B/5Q2/PPP2PPP/R3K1NR w KQkq g6 0 8"), 
@@ -106,17 +112,25 @@ void Test::testUnmakeQuietMoves() {
     uint32_t moves[6] { 0xf0130458, 0xf020066b, 0xf04005d2, 
                         0xf06007ad, 0xf0800107, 0xd0a00d3b };
     
-    std::string results[2] { " pass\n", " fail\n" };
     bool test_failed = false;
     bool move_failed;
 
+    int avg_time = 0;
+
     for (int i = 5; i >= 0; i--) {
         board = positions[i+1];
+
+        auto start = std::chrono::high_resolution_clock::now();
         board.unmakeMove(moves[i]);
+        auto stop = std::chrono::high_resolution_clock::now();
+
+        avg_time += std::chrono::duration_cast<std::chrono::nanoseconds>(stop-start).count();
+
         move_failed = !(board == positions[i]);
+        test_failed |= move_failed;
 
         if (move_failed) {
-            clog << "Unmake quiet move " << i << results[1];
+            clog << "Unmake quiet move " << i << "fail.\n";
             
             clog << "Expected:\n";
             positions[i].printOut();
@@ -125,5 +139,6 @@ void Test::testUnmakeQuietMoves() {
             board.printOut();
         } 
     }
-    clog << "Unmake quiet move" << results[test_failed];
+    std::string results[2] { " pass", " fail" };
+    clog << "Unmake quiet move" << results[test_failed] << ", Avg overhead: " << avg_time/6 << "ns\n";
 }
