@@ -2,6 +2,7 @@
 #include "precompute.hpp"
 #include <iostream>
 #include <string>
+#include <chrono>
 #include "board.hpp"
 
 using std::cout;
@@ -41,56 +42,88 @@ void Test::makeUnmake() {
     // pawnPushes();
 }
 
-void Test::quietMoves() {
-    Board positions[7] { Board("r2qkbnr/ppp4p/2npbp2/3Np1p1/2BPP2B/5Q2/PPP2PPP/R3K1NR w KQkq g6 0 8"), 
-                         Board("r2qkbnr/ppp4p/2npbp2/3Np1p1/2BPP3/5QB1/PPP2PPP/R3K1NR b KQkq - 1 8"),
-                         Board("r2qkbnr/ppp4p/2np1p2/3Np1p1/2BPP1b1/5QB1/PPP2PPP/R3K1NR w KQkq - 2 9"),
-                         Board("r2qkbnr/ppp4p/2np1p2/3Np1p1/2BPP1b1/Q5B1/PPP2PPP/R3K1NR b KQkq - 3 9"),
-                         Board("r2qkbnr/ppp4p/3p1p2/3Np1p1/1nBPP1b1/Q5B1/PPP2PPP/R3K1NR w KQkq -- 4 10"),
-                         Board("r2qkbnr/ppp4p/3p1p2/3Np1p1/1nBPP1b1/Q5B1/PPP2PPP/3RK1NR b Kkq - 5 10"),
-                         Board("r2q1bnr/pppk3p/3p1p2/3Np1p1/1nBPP1b1/Q5B1/PPP2PPP/3RK1NR w K - 6 11") };
+void Test::testQuietMoves() {
+    testMakeQuietMoves();
+    testUnmakeQuietMoves();
 
-    Board board = positions[0];
+    cout << "\n";
+}
+
+void Test::testMakeQuietMoves() {
+    Board board;
+    Board positions[7] { 
+        Board("r2qkbnr/ppp4p/2npbp2/3Np1p1/2BPP2B/5Q2/PPP2PPP/R3K1NR w KQkq g6 0 8"), 
+        Board("r2qkbnr/ppp4p/2npbp2/3Np1p1/2BPP3/5QB1/PPP2PPP/R3K1NR b KQkq - 1 8"),
+        Board("r2qkbnr/ppp4p/2np1p2/3Np1p1/2BPP1b1/5QB1/PPP2PPP/R3K1NR w KQkq - 2 9"),
+        Board("r2qkbnr/ppp4p/2np1p2/3Np1p1/2BPP1b1/Q5B1/PPP2PPP/R3K1NR b KQkq - 3 9"),
+        Board("r2qkbnr/ppp4p/3p1p2/3Np1p1/1nBPP1b1/Q5B1/PPP2PPP/R3K1NR w KQkq -- 4 10"),
+        Board("r2qkbnr/ppp4p/3p1p2/3Np1p1/1nBPP1b1/Q5B1/PPP2PPP/3RK1NR b Kkq - 5 10"),
+        Board("r2q1bnr/pppk3p/3p1p2/3Np1p1/1nBPP1b1/Q5B1/PPP2PPP/3RK1NR w K - 6 11") 
+    };
 
     uint32_t moves[6] { 0xf0130458, 0xf020066b, 0xf04005d2, 
                         0xf06007ad, 0xf0800107, 0xd0a00d3b };
     
-    std::string results[2] { " fail", " pass" };
-    bool test_passed;
+    
+    std::string results[2] { " pass\n", " fail\n" };
+    bool test_failed = false;
+    bool move_failed;
 
     for (int i = 0; i <= 5; i++) {
+        board = positions[i]; 
         board.makeMove(moves[i]);
 
-        test_passed = (board == positions[i+1]);
-        clog << "Make quiet move " << i << results[test_passed];
+        move_failed = !(board == positions[i+1]);
+        test_failed |= move_failed;
 
-        if (!test_passed) {
-            cout << "Expected:\n";
+        if (move_failed) {
+            clog << "Make quiet move " << i << results[1];
+
+            clog << "Expected:\n";
             positions[i+1].printOut();
 
-            cout << "Actual:\n";
+            clog << "Actual:\n";
             board.printOut();
-            break;
-        } 
+        }
     }
 
-    cout << "\n";
+    clog << "Make quiet move" << results[test_failed];
+}
 
-    board = positions[6];
+void Test::testUnmakeQuietMoves() {
+
+    Board board;
+    Board positions[7] { 
+        Board("r2qkbnr/ppp4p/2npbp2/3Np1p1/2BPP2B/5Q2/PPP2PPP/R3K1NR w KQkq g6 0 8"), 
+        Board("r2qkbnr/ppp4p/2npbp2/3Np1p1/2BPP3/5QB1/PPP2PPP/R3K1NR b KQkq - 1 8"),
+        Board("r2qkbnr/ppp4p/2np1p2/3Np1p1/2BPP1b1/5QB1/PPP2PPP/R3K1NR w KQkq - 2 9"),
+        Board("r2qkbnr/ppp4p/2np1p2/3Np1p1/2BPP1b1/Q5B1/PPP2PPP/R3K1NR b KQkq - 3 9"),
+        Board("r2qkbnr/ppp4p/3p1p2/3Np1p1/1nBPP1b1/Q5B1/PPP2PPP/R3K1NR w KQkq -- 4 10"),
+        Board("r2qkbnr/ppp4p/3p1p2/3Np1p1/1nBPP1b1/Q5B1/PPP2PPP/3RK1NR b Kkq - 5 10"),
+        Board("r2q1bnr/pppk3p/3p1p2/3Np1p1/1nBPP1b1/Q5B1/PPP2PPP/3RK1NR w K - 6 11") 
+    };
+
+    uint32_t moves[6] { 0xf0130458, 0xf020066b, 0xf04005d2, 
+                        0xf06007ad, 0xf0800107, 0xd0a00d3b };
+    
+    std::string results[2] { " pass\n", " fail\n" };
+    bool test_failed = false;
+    bool move_failed;
+
     for (int i = 5; i >= 0; i--) {
+        board = positions[i+1];
         board.unmakeMove(moves[i]);
+        move_failed = !(board == positions[i]);
 
-        test_passed = (board == positions[i]);
-        clog << "Unmake quiet move " << i << results[test_passed];
-
-        if (!test_passed) {
-            cout << "Expected:\n";
+        if (move_failed) {
+            clog << "Unmake quiet move " << i << results[1];
+            
+            clog << "Expected:\n";
             positions[i].printOut();
 
-            cout << "Actual:\n";
+            clog << "Actual:\n";
             board.printOut();
-            break;
         } 
     }
-    cout << "\n";
+    clog << "Unmake quiet move" << results[test_failed];
 }

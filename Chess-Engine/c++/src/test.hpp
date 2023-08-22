@@ -8,7 +8,10 @@ void printBitboard(uint64_t bitboard);
 namespace Test {
     void makeUnmake();
 
-    void quietMoves();
+    void testQuietMoves();
+    void testMakeQuietMoves();
+    void testUnmakeQuietMoves();
+    
     void captures();
     
     void castling();
