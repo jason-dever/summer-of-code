@@ -55,7 +55,7 @@ void Board::storeFEN(const std::string FEN) {
 
     i++;
     if (FEN[i] < 105 && FEN[i] > 96) {
-        char col;
+        char col = 0;
         char cols[8] = {'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h'};
 
         for (int_fast8_t j = 0; j <= 7; j++) {
@@ -171,6 +171,5 @@ bool Board::operator==(const Board other_board) {
         }
         boards_are_different |= (capture_stack[colour] != other_board.capture_stack[colour]);
     }
-    std::cout << "\n";
     return !boards_are_different;
 }
