@@ -13,6 +13,7 @@ class Board {
 
     public:
         Board(const std::string FEN);
+        Board() {}
 
         void storeFEN(const std::string FEN);
         void printOut();
@@ -169,9 +170,8 @@ inline bool Board::makeMove(const uint32_t move) {
     turn = opponent; 
 
     if (getEnemyCheckingPieces(opponent)) {
-        std::cout << "bad move\n";
-        std::cout << getEnemyCheckingPieces(opponent) << "\n";
-        // unmakeMove(move);
+        std::clog << "bad move\n" << getEnemyCheckingPieces(opponent) << "\n";
+        unmakeMove(move);
         return 0;
     }
 
