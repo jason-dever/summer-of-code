@@ -5,20 +5,18 @@
 
 void printBitboard(uint64_t bitboard);
 
-namespace Test {
-    void makeUnmake();
+void testMakeUnmake();
 
-    void testQuietMoves();
-    void testMakeQuietMoves();
-    void testUnmakeQuietMoves();
-    
-    void captures();
-    
-    void castling();
+void testQuietMoves();
+void testMakeQuietMoves();
+void testUnmakeQuietMoves();
 
-    void enPassant();
-    void pawnPromotions();
-    void pawnPushes();
+void testCaptures();
 
-    void perft();
-}
+void testCastling();
+
+void enPassant();
+void pawnPromotions();
+void pawnPushes();
+
+void perft();
