@@ -2,6 +2,8 @@
 
 #include "precompute.hpp"
 #include "board.hpp"
+#include <array>
+#include <vector>
 
 struct TestResult {
     int overhead;
@@ -15,10 +17,13 @@ void printBitboard(uint64_t);
 void testMakeUnmake();
 
 void testQuietMoves();
+void testCaptures();
+
 void testMakeQuietMoves(std::vector<uint32_t>, std::vector<Board>);
 void testUnmakeQuietMoves(std::vector<uint32_t>, std::vector<Board>);
 
-void testCaptures();
+void testMakeCaptures(std::vector<uint32_t>, std::vector<Board>);
+void testUnmakeCaptures(std::vector<uint32_t>, std::vector<Board>);
 
 void testCastling();
 void testMakeCastling();
@@ -28,7 +33,10 @@ void enPassant();
 void pawnPromotions();
 void pawnPushes();
 
-TestResult testMoveTemplate(std::vector<uint32_t>, std::vector<Board>, int);
+TestResult testMakeUnmakeLayout(std::vector<uint32_t>, std::vector<Board>, int);
+TestResult testMakeUnmakeLayout(std::vector<uint32_t>, std::vector<Board>, 
+                                std::vector<std::array<uint64_t, 2>>, int);
+
 int performMethodAndGetOverhead(const uint32_t, Board*, const int);
 bool assertBoardIsCorrect(Board, std::vector<Board>, int, int);
 
