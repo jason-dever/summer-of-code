@@ -97,7 +97,6 @@ void testCaptures() {
         Board("rnbq4/pppp1k2/5N2/4p1P1/3Q2p1/1P6/P1P1PP2/R1B1K1Nr w Q - 0 10")
     };
 
-
     testMakeCaptures(moves, positions);
 
     std::reverse(positions.begin(), positions.end());
@@ -108,23 +107,44 @@ void testCaptures() {
     cout << "\n";
 }
 
-void testMakeCaptures(vector<uint32_t> moves, vector<Board> positions) {
-    TestResult out = testMakeUnmakeLayout(moves, positions, makeMove);
+void testPawnPushes() {
+    vector<uint32_t> moves = { 0xf00006cb, 0xf00708f3, 0xf017050c, 
+                               0xf0000975, 0xf01b068a, 0xf00509b6, 
+                               0xf01d089a, 0xf00007a6           };
 
-    clog << "Make captures" << results[out.result] <<
-        ". Average overhead: " << out.overhead/moves.size() << "ns\n";
+    vector<Board> positions = {
+        Board("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"),
+
+        Board("rnbqkbnr/pppppppp/8/8/4P3/8/PPPP1PPP/RNBQKBNR b KQkq e3 0 1"),
+        Board("rnbqkbnr/pppp1ppp/8/4p3/4P3/8/PPPP1PPP/RNBQKBNR w KQkq e6 0 2"),
+        Board("rnbqkbnr/pppp1ppp/8/4p3/4P3/3P4/PPP2PPP/RNBQKBNR b KQkq - 0 2"),
+        Board("rnbqkbnr/pp1p1ppp/8/2p1p3/4P3/3P4/PPP2PPP/RNBQKBNR w KQkq c6 0 3"),
+        Board("rnbqkbnr/pp1p1ppp/8/2p1p3/4PP2/3P4/PPP3PP/RNBQKBNR b KQkq f3 0 3"),
+        Board("rnbqkbnr/p2p1ppp/8/1pp1p3/4PP2/3P4/PPP3PP/RNBQKBNR w KQkq b6 0 4"),
+        Board("rnbqkbnr/p2p1ppp/8/1pp1pP2/4P3/3P4/PPP3PP/RNBQKBNR b KQkq - 0 4"),
+        Board("rnbqkbnr/p2p1ppp/8/2p1pP2/1p2P3/3P4/PPP3PP/RNBQKBNR w KQkq - 0 5")
+    };
+
+    testMakePawnPushes(moves, positions);
+
+    std::reverse(positions.begin(), positions.end());
+    std::reverse(moves.begin(), moves.end());
+
+    testUnmakePawnPushes(moves, positions);
 }
 
-void testUnmakeCaptures(vector<uint32_t> moves, vector<Board> positions) {
-    vector<array<uint64_t, 2>> capture_stacks = { 
-        array<uint64_t, 2>{10, 1027}, array<uint64_t, 2>{10, 128}, array<uint64_t, 2>{1, 128},
-        array<uint64_t, 2>{1, 16}, array<uint64_t, 2>{0, 16}, array<uint64_t, 2>{0, 2},
-        array<uint64_t, 2>{0, 2}, array<uint64_t, 2>{0, 0} };
+void testMakePawnPushes(vector<uint32_t> moves, vector<Board> positions) {
+    TestResult out = testMakeUnmakeLayout(moves, positions, makeMove);
+    
+    
+    clog << "Make pawn pushes" << results[out.result] << 
+        ". Average overhead: " << out.overhead/moves.size() << "ns\n"; 
+}
+void testUnmakePawnPushes(vector<uint32_t> moves, vector<Board> positions) {
+    TestResult out = testMakeUnmakeLayout(moves, positions, unmakeMove);
 
-    TestResult out = testMakeUnmakeLayout(moves, positions, capture_stacks, unmakeMove);
-
-    clog << "Unmake captures" << results[out.result] <<
-        ". Average overhead: " << out.overhead/moves.size() << "ns\n";   
+    clog << "Unmake pawn pushes" << results[out.result] << 
+        ". Average overhead: " << out.overhead/moves.size() << "ns\n"; 
 }
 
 void testMakeQuietMoves(vector<uint32_t> moves, vector<Board> positions) {
@@ -133,12 +153,30 @@ void testMakeQuietMoves(vector<uint32_t> moves, vector<Board> positions) {
     clog << "Make quiet moves" << results[out.result] << 
         ". Average overhead: " << out.overhead/moves.size() << "ns\n"; 
 }
-
 void testUnmakeQuietMoves(vector<uint32_t> moves, vector<Board> positions) {
     TestResult out = testMakeUnmakeLayout(moves, positions, unmakeMove);
 
     clog << "Unmake quiet moves" << results[out.result] << 
         ". Average overhead: " << out.overhead/moves.size() << "ns\n"; 
+}
+
+void testMakeCaptures(vector<uint32_t> moves, vector<Board> positions) {
+    TestResult out = testMakeUnmakeLayout(moves, positions, makeMove);
+
+    clog << "Make captures" << results[out.result] <<
+        ". Average overhead: " << out.overhead/moves.size() << "ns\n";
+}
+void testUnmakeCaptures(vector<uint32_t> moves, vector<Board> positions) {
+    vector<array<uint64_t, 2>> capture_stacks = { 
+        array<uint64_t, 2>{10, 1027}, array<uint64_t, 2>{10, 128}, array<uint64_t, 2>{1, 128},
+        array<uint64_t, 2>{1, 16}, array<uint64_t, 2>{0, 16}, array<uint64_t, 2>{0, 2},
+        array<uint64_t, 2>{0, 2}, array<uint64_t, 2>{0, 0} 
+    };
+
+    TestResult out = testMakeUnmakeLayout(moves, positions, capture_stacks, unmakeMove);
+
+    clog << "Unmake captures" << results[out.result] <<
+        ". Average overhead: " << out.overhead/moves.size() << "ns\n";   
 }
 
 TestResult testMakeUnmakeLayout(vector<uint32_t> moves, vector<Board> positions, int method_to_perform) {
