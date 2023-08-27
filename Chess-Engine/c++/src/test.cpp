@@ -156,7 +156,7 @@ TestResult testMakeUnmakeLayout(vector<uint32_t> moves, vector<Board> positions,
 }
 
 TestResult testMakeUnmakeLayout(vector<uint32_t> moves, vector<Board> positions, 
-                            vector<array<uint64_t, 2>> capture_stacks, int method_to_perform) {
+                                vector<array<uint64_t, 2>> capture_stacks, int method_to_perform) {
     
     Board board = positions[0];
 
