@@ -20,6 +20,8 @@ void testQuietMoves();
 void testCaptures();
 void testPawnPushes();
 void testEnPassant();
+void testPromotions();
+void testCastling();
 
 void testMakeQuietMoves(std::vector<uint32_t>, std::vector<Board>);
 void testUnmakeQuietMoves(std::vector<uint32_t>, std::vector<Board>);
@@ -33,11 +35,11 @@ void testUnmakePawnPushes(std::vector<uint32_t>, std::vector<Board>);
 void testMakeEnPassant(std::vector<uint32_t>, std::vector<Board>);
 void testUnmakeEnPassant(std::vector<uint32_t>, std::vector<Board>);
 
-void testCastling();
-void testMakeCastling();
-void testUnmakeCastling();
+void testMakePromotions(std::vector<uint32_t>, std::vector<Board>);
+void testUnmakePromotions(std::vector<uint32_t>, std::vector<Board>);
 
-void pawnPromotions();
+void testMakeCastling(std::vector<uint32_t>, std::vector<Board>);
+void testUnmakeCastling(std::vector<uint32_t>, std::vector<Board>);
 
 TestResult testMakeUnmakeLayout(std::vector<uint32_t>, std::vector<Board>, int);
 TestResult testMakeUnmakeLayout(std::vector<uint32_t>, std::vector<Board>, 

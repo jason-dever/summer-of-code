@@ -29,8 +29,8 @@
         Legal castle squares; in unmake, castle_squares will be set to
         a PDEP of these bits with a mask of the four potential castle squares.
 
-        1111    0101    0010
-        qkQK     k k      q
+        1111    0101    0010    1010
+        qkQK     k k      q     q q  
          
  */
 

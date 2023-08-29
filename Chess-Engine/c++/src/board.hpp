@@ -4,30 +4,30 @@
 #include <string>
 #include "precompute.hpp"
 #include <vector>
-#include "test.hpp"
+#include <array>
 
 enum PiecesEnum { pawns, knights, bishops, rooks, queens, king };
 enum ColoursEnum { white, black };
 
 class Board {
-
     public:
-        Board(const std::string FEN);
+        Board(const std::string);
         Board() {}
 
-        void storeFEN(const std::string FEN);
+        void storeFEN(const std::string);
         void printOut();
 
         inline void genMoves();
 
-        inline bool makeMove(const uint32_t move);
-        inline void unmakeMove(const uint32_t move);
+        inline bool makeMove(const uint32_t);
+        inline void unmakeMove(const uint32_t);
 
-        void operator=(const Board original);
-        bool operator==(const Board other_board);
+        void operator=(const Board);
+        bool operator==(const Board);
+        bool operator!=(const Board);
 
     // private:
-        bool turn = 0;
+        bool turn = white;
         
         uint64_t pieces[2][6] { 0 };
 
@@ -65,7 +65,7 @@ class Board {
 
         inline uint64_t whitePieces();
         inline uint64_t blackPieces();
-        inline uint64_t sidePieces(const bool side);
+        inline uint64_t sidePieces(const bool);
 
         inline void genKingMoves();
         inline void genKnightMoves();
@@ -74,8 +74,8 @@ class Board {
         inline void genQueenMoves();
         inline void genPawnMoves();
 
-        inline uint64_t getEnemyAttackedSquares(const bool enemy);
-        inline uint64_t getEnemyCheckingPieces(const bool enemy);
+        inline uint64_t getEnemyAttackedSquares(const bool);
+        inline uint64_t getEnemyCheckingPieces(const bool);
 };
 
 inline bool Board::makeMove(const uint32_t move) {
@@ -119,7 +119,7 @@ inline bool Board::makeMove(const uint32_t move) {
         return 1;
     }
 
-    uint_fast8_t moving_piece;
+    int_fast16_t moving_piece;
     uint64_t from = 1ULL << (move & 0x3f);
     uint64_t to = 1ULL << ( (move >> 6) & 0x3f );
 
@@ -127,13 +127,13 @@ inline bool Board::makeMove(const uint32_t move) {
         if (from & pieces[turn][moving_piece]) break;    
     }
 
-    castle_squares &= ~from;
-    castle_squares ^= (0x81ULL << (56*turn))*(moving_piece == king); 
+    castle_squares &= ~(from | to);
+    castle_squares &= ~( (0x81ULL << (56*turn))*(moving_piece == king) ); 
 
     pieces[turn][moving_piece] ^= from;
     
     if (move & capture_mask) {
-        uint_fast8_t captured_piece;
+        int_fast16_t captured_piece;
 
         for (captured_piece = pawns; captured_piece < king; captured_piece++) {
             if (to & pieces[opponent][captured_piece]) break;
@@ -147,7 +147,7 @@ inline bool Board::makeMove(const uint32_t move) {
         half_moves = 0;
     }
     else if (move & en_passant_mask) {
-        pieces[opponent][pawns] ^= pawn_moveboards[opponent][pushes][_tzcnt_u64(en_passant_squares)];
+        pieces[opponent][pawns] ^= pawn_moveboards[opponent][pushes][__tzcnt_u64(to)];
         capture_stack[turn] <<= 3;
 
         half_moves = 0;
@@ -157,7 +157,7 @@ inline bool Board::makeMove(const uint32_t move) {
         half_moves = 0;
         uint64_t temp_shifts[2] = { from << 8, from >> 8 };
 
-        en_passant_squares = (pawn_moveboards[opponent][pushes][_tzcnt_u64(to)]) & temp_shifts[turn];
+        en_passant_squares = (pawn_moveboards[opponent][pushes][__tzcnt_u64(to)]) & temp_shifts[turn];
     
         if (move & queen_promo_mask) 
             moving_piece = queens;
@@ -219,7 +219,7 @@ inline void Board::unmakeMove(const uint32_t move) {
         capture_stack[turn] >>= 3;
     }
     else if (move & en_passant_mask) {
-        pieces[!turn][pawns] |= pawn_moveboards[!turn][pushes][_tzcnt_u64(to)];
+        pieces[!turn][pawns] |= pawn_moveboards[!turn][pushes][__tzcnt_u64(to)];
         capture_stack[turn] >>= 3;
     }
 
@@ -253,42 +253,42 @@ inline uint64_t Board::getEnemyAttackedSquares(const bool enemy) {
 
     bitboard = pieces[enemy][pawns];
     while (bitboard) {
-        sq = _tzcnt_u64(bitboard);
+        sq = __tzcnt_u64(bitboard);
         opponent_attacked_squares |= pawn_moveboards[enemy][captures][sq];
         flipBit(bitboard, sq);
     }
     bitboard = pieces[enemy][knights];
     while (bitboard) {
-        sq = _tzcnt_u64(bitboard);
+        sq = __tzcnt_u64(bitboard);
         opponent_attacked_squares |= knight_moveboards[sq];
         flipBit(bitboard, sq);
     }
     bitboard = pieces[enemy][bishops];
     while (bitboard) {
-        sq = _tzcnt_u64(bitboard);
+        sq = __tzcnt_u64(bitboard);
         opponent_attacked_squares |= bishopMoves(sq, occupancy);
         flipBit(bitboard, sq);
     }
     bitboard = pieces[enemy][rooks];
     while (bitboard) {
-        sq = _tzcnt_u64(bitboard);
+        sq = __tzcnt_u64(bitboard);
         opponent_attacked_squares |= rookMoves(sq, occupancy);
         flipBit(bitboard, sq);
     }
     bitboard = pieces[enemy][queens];
     while (bitboard) {
-        sq = _tzcnt_u64(bitboard);
+        sq = __tzcnt_u64(bitboard);
         opponent_attacked_squares |= rookMoves(sq, occupancy) | bishopMoves(sq, occupancy);
         flipBit(bitboard, sq);
     }
-    opponent_attacked_squares |= king_moveboards[_tzcnt_u64(pieces[enemy][king])];
+    opponent_attacked_squares |= king_moveboards[__tzcnt_u64(pieces[enemy][king])];
     
     return opponent_attacked_squares;
 }
 
 inline uint64_t Board::getEnemyCheckingPieces(const bool enemy) {
     uint64_t attackers = 0;
-    uint_fast8_t king_square = _tzcnt_u64(pieces[!enemy][king]);
+    uint_fast8_t king_square = __tzcnt_u64(pieces[!enemy][king]);
 
     occupancy = blackPieces() | whitePieces();
 
