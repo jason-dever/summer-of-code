@@ -39,9 +39,9 @@ void printBitboard(uint64_t bitboard) {
 enum BoardMethodsEnum { makeMove, unmakeMove };
 std::string results[2] = {" fail", " pass" };
 
-TestResult::TestResult(int test_overhead, bool test_result) {
-        overhead = test_overhead;
-        result = test_result;
+TestResult::TestResult(int overhead, bool result) {
+        this->overhead = overhead;
+        this->result = result;
 }
 
 void testMakeUnmake() {
@@ -50,6 +50,7 @@ void testMakeUnmake() {
 
     testPawnPushes();
     testEnPassant();
+    testPromotions();
 }
 
 void testQuietMoves() {
@@ -152,35 +153,26 @@ void testEnPassant() {
     std::cout << "\n";
 }
 
-void testMakeEnPassant(vector<uint32_t> moves, vector<Board> positions) {
-    Board board = positions[0];
-    bool test_passed = true;
-    int overhead = 0;
+void testPromotions() {
+    vector<uint32_t> moves = { 0x41cf, 0x4e30, 0x818e, 0x8e71 };
 
-    overhead += performMethodAndGetOverhead(moves[0], &board, makeMove);    
-    test_passed &= assertBoardIsCorrect(board, positions, 0, makeMove);
+    vector<Board> positions = {
+        Board("2kr4/1bpp2PP/2n2n2/4p3/6q1/2NB1N2/ppPP1PP1/3Q1RK1 b - - 0 17"),
 
-    board = positions[2];
-    overhead += performMethodAndGetOverhead(moves[1], &board, makeMove);
-    test_passed &= assertBoardIsCorrect(board, positions, 2, makeMove);
+        Board("2kr4/1bpp2PP/2n2n2/4p3/6q1/2NB1N2/1pPP1PP1/n2Q1RK1 w - - 0 18"),
+        Board("2kr3N/1bpp2P1/2n2n2/4p3/6q1/2NB1N2/1pPP1PP1/n2Q1RK1 b - - 0 18"),
+        Board("2kr3N/1bpp2P1/2n2n2/4p3/6q1/2NB1N2/2PP1PP1/nq1Q1RK1 w - - 0 19"),
+        Board("2kr2QN/1bpp4/2n2n2/4p3/6q1/2NB1N2/2PP1PP1/nq1Q1RK1 b - - 0 19")
+    };
 
-    clog << "Make en passant" << results[test_passed] << 
-        ". Average overhead: " << overhead/moves.size() << "ns\n"; 
-}
-void testUnmakeEnPassant(vector<uint32_t> moves, vector<Board> positions) {
-    Board board = positions[0];
-    bool test_passed = true;
-    int overhead = 0;
+    testMakePromotions(moves, positions);
 
-    overhead += performMethodAndGetOverhead(moves[0], &board, unmakeMove);    
-    test_passed &= assertBoardIsCorrect(board, positions, 0, unmakeMove);
+    std::reverse(moves.begin(), moves.end());
+    std::reverse(positions.begin(), positions.end());
 
-    board = positions[2];
-    overhead += performMethodAndGetOverhead(moves[1], &board, unmakeMove);
-    test_passed &= assertBoardIsCorrect(board, positions, 2, unmakeMove);
+    testUnmakePromotions(moves, positions);
 
-    clog << "Unmake en passant" << results[test_passed] << 
-        ". Average overhead: " << overhead/moves.size() << "ns\n"; 
+    std::cout << "\n";
 }
 
 void testMakeQuietMoves(vector<uint32_t> moves, vector<Board> positions) {
@@ -227,6 +219,50 @@ void testUnmakePawnPushes(vector<uint32_t> moves, vector<Board> positions) {
 
     clog << "Unmake pawn pushes" << results[out.result] << 
         ". Average overhead: " << out.overhead/moves.size() << "ns\n"; 
+}
+
+void testMakeEnPassant(vector<uint32_t> moves, vector<Board> positions) {
+    Board board = positions[0];
+    bool test_passed = true;
+    int overhead = 0;
+
+    overhead += performMethodAndGetOverhead(moves[0], &board, makeMove);    
+    test_passed &= assertBoardIsCorrect(board, positions, 0, makeMove);
+
+    board = positions[2];
+    overhead += performMethodAndGetOverhead(moves[1], &board, makeMove);
+    test_passed &= assertBoardIsCorrect(board, positions, 2, makeMove);
+
+    clog << "Make en passant" << results[test_passed] << 
+        ". Average overhead: " << overhead/moves.size() << "ns\n"; 
+}
+void testUnmakeEnPassant(vector<uint32_t> moves, vector<Board> positions) {
+    Board board = positions[0];
+    bool test_passed = true;
+    int overhead = 0;
+
+    overhead += performMethodAndGetOverhead(moves[0], &board, unmakeMove);    
+    test_passed &= assertBoardIsCorrect(board, positions, 0, unmakeMove);
+
+    board = positions[2];
+    overhead += performMethodAndGetOverhead(moves[1], &board, unmakeMove);
+    test_passed &= assertBoardIsCorrect(board, positions, 2, unmakeMove);
+
+    clog << "Unmake en passant" << results[test_passed] << 
+        ". Average overhead: " << overhead/moves.size() << "ns\n"; 
+}
+
+void testMakePromotions(vector<uint32_t> moves, vector<Board> positions) {
+    TestResult out = testMakeUnmakeLayout(moves, positions, makeMove);
+
+    clog << "Make promotions" << results[out.result] <<
+        ". Average overhead: " << out.overhead/moves.size() << "ns\n";
+}
+void testUnmakePromotions(vector<uint32_t> moves, vector<Board> positions) {
+    TestResult out = testMakeUnmakeLayout(moves, positions, unmakeMove);
+
+    clog << "Unmake promotions" << results[out.result] <<
+        ". Average overhead: " << out.overhead/moves.size() << "ns\n";
 }
 
 TestResult testMakeUnmakeLayout(vector<uint32_t> moves, vector<Board> positions, int method_to_perform) {
