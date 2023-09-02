@@ -101,7 +101,7 @@ inline bool Board::makeMove(const uint32_t move) {
         pieces[turn][rooks] |= (castle_square >> 3);
 
 
-        castle_squares ^= castle_square;
+        castle_squares &= ~(castle_square | (castle_square >> 7));
         turn = opponent;
         return 1;
     }
@@ -114,7 +114,7 @@ inline bool Board::makeMove(const uint32_t move) {
         pieces[turn][rooks] |= (castle_square << 2);
 
 
-        castle_squares ^= castle_square;
+        castle_squares &= ~(castle_square | (castle_square << 7));
         turn = opponent;
         return 1;
     }
@@ -196,7 +196,6 @@ inline void Board::unmakeMove(const uint32_t move) {
         pieces[turn][rooks] ^= (castle_square >> 3);
         pieces[turn][rooks] |= castle_square;
 
-        castle_squares |= castle_square;
         return;
     }
     else if ((move & kingcastle_mask) == kingcastle_mask) {
@@ -207,7 +206,6 @@ inline void Board::unmakeMove(const uint32_t move) {
         pieces[turn][rooks] ^= (castle_square << 2);
         pieces[turn][rooks] |= castle_square;
 
-        castle_squares |= castle_square;
         return;
     }
 
