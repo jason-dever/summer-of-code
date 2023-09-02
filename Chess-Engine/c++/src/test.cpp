@@ -51,6 +51,8 @@ void testMakeUnmake() {
     testPawnPushes();
     testEnPassant();
     testPromotions();
+
+    testCastling();
 }
 
 void testQuietMoves() {
@@ -175,6 +177,29 @@ void testPromotions() {
     std::cout << "\n";
 }
 
+void testCastling() {
+    vector<uint32_t> moves = { 0xf0003000, 0x30203000, 0xf000f000, 0x3020f000 };
+
+    vector<Board> positions = {
+        Board("r3k2r/pppq1ppp/2np1n2/2b1p1B1/2B1P1b1/P1NP1N2/1PPQ1PPP/R3K2R b KQkq - 0 11"),
+    
+        Board("r4rk1/pppq1ppp/2np1n2/2b1p1B1/2B1P1b1/P1NP1N2/1PPQ1PPP/R3K2R w KQ - 1 12"),
+        Board("r4rk1/pppq1ppp/2np1n2/2b1p1B1/2B1P1b1/P1NP1N2/1PPQ1PPP/R4RK1 b - - 2 12"),
+
+        Board("2kr3r/pppq1ppp/2np1n2/2b1p1B1/2B1P1b1/P1NP1N2/1PPQ1PPP/R3K2R w KQ - 1 12"),
+        Board("2kr3r/pppq1ppp/2np1n2/2b1p1B1/2B1P1b1/P1NP1N2/1PPQ1PPP/2KR3R b - 2 12")
+    };
+
+    testMakeCastling(moves, positions);
+
+    std::reverse(moves.begin(), moves.end());
+    std::reverse(positions.begin(), positions.end());
+
+    testUnmakeCastling(moves, positions);
+
+    std::cout << "\n";
+}
+
 void testMakeQuietMoves(vector<uint32_t> moves, vector<Board> positions) {
     TestResult out = testMakeUnmakeLayout(moves, positions, makeMove);
 
@@ -264,6 +289,47 @@ void testUnmakePromotions(vector<uint32_t> moves, vector<Board> positions) {
     clog << "Unmake promotions" << results[out.result] <<
         ". Average overhead: " << out.overhead/moves.size() << "ns\n";
 }
+
+void testMakeCastling(vector<uint32_t> moves, vector<Board> positions) {
+    Board board;
+    auto overhead = 0;
+    auto test_passed = true;
+
+    for (auto i = 0; i <= 1; i++) {
+        board = positions[i];
+        overhead += performMethodAndGetOverhead(moves[i], &board, makeMove);
+        test_passed &= assertBoardIsCorrect(board, positions, i, makeMove);
+    }
+    board = positions[0];
+    for (auto i = 2; i <= 3; i++) {
+        overhead += performMethodAndGetOverhead(moves[i], &board, makeMove);
+        test_passed &= assertBoardIsCorrect(board, positions, i, makeMove);
+    }
+
+    clog << "Make castling" << results[test_passed] << 
+        ". Average overhead: " << overhead/moves.size() << "ns\n";
+}
+void testUnmakeCastling(vector<uint32_t> moves, vector<Board> positions) {
+    Board board = positions[0];
+    auto overhead = 0;
+    auto test_passed = true;
+
+    overhead += performMethodAndGetOverhead(moves[0], &board, unmakeMove);
+    test_passed &= assertBoardIsCorrect(board, positions, 0, unmakeMove);
+
+    overhead += performMethodAndGetOverhead(moves[1], &board, unmakeMove);
+    test_passed &= (board == positions[4]);
+
+    for (auto i = 2; i <= 3; i++) {
+        board = positions[i];
+        overhead += performMethodAndGetOverhead(moves[i], &board, unmakeMove);
+        test_passed &= assertBoardIsCorrect(board, positions, i, unmakeMove);
+    }
+
+    clog << "Unmake castling" << results[test_passed] << 
+        ". Average overhead: " << overhead/moves.size() << "ns\n";
+}
+
 
 TestResult testMakeUnmakeLayout(vector<uint32_t> moves, vector<Board> positions, int method_to_perform) {
     Board board = positions[0];
