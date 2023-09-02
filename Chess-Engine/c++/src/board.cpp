@@ -157,6 +157,10 @@ void Board::operator=(const Board original) {
 }
 
 bool Board::operator==(const Board other_board) {
+    return !(operator!=(other_board));
+}
+
+bool Board::operator!=(const Board other_board) {
     bool boards_are_different = false;
 
     boards_are_different |= (turn != other_board.turn);
@@ -169,7 +173,7 @@ bool Board::operator==(const Board other_board) {
         for (int_fast8_t piece = pawns; piece <= king; piece++) {
             boards_are_different |= (pieces[colour][piece] != other_board.pieces[colour][piece]);    
         }
-        boards_are_different |= (capture_stack[colour] != other_board.capture_stack[colour]);
+        // boards_are_different |= (capture_stack[colour] != other_board.capture_stack[colour]);
     }
-    return !boards_are_different;
+    return boards_are_different;
 }
