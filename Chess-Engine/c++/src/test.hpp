@@ -4,12 +4,21 @@
 #include "board.hpp"
 #include <array>
 #include <vector>
+#include <string>
 
 struct TestResult {
     int overhead;
     bool result;
 
     TestResult(int, bool);
+};
+
+struct Perft : Board{
+    int nodes_visited = 0;
+    std::vector<bool> depths_reached;
+
+    Perft(std::string); 
+    void perft(const int, const int);
 };
 
 void printBitboard(uint64_t);
@@ -47,5 +56,3 @@ TestResult testMakeUnmakeLayout(std::vector<uint32_t>, std::vector<Board>,
 
 int performMethodAndGetOverhead(const uint32_t, Board*, const int);
 bool assertBoardIsCorrect(Board, std::vector<Board>, int, int);
-
-void perft();

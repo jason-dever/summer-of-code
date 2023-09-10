@@ -6,6 +6,7 @@
 #include <vector>
 #include <algorithm>
 #include "board.hpp"
+#include "movegen.hpp"
 #include <array>
 
 using std::cout;
@@ -13,9 +14,36 @@ using std::clog;
 using std::vector;
 using std::array;
 
+Perft::Perft(std::string FEN) {
+    depths_reached = { false, false, false, false, false, false };
+    storeFEN(FEN);
+}
+
+void Perft::perft(int depth, int max_depth) {
+    // TODO add benchmarks
+
+    if (depth == max_depth+1) {
+        return;
+    }
+
+    if (depths_reached[depth] == false) {
+        clog << "perft(" << depth << "): " << nodes_visited << " nodes visited.\n";
+        depths_reached[depth] = true;
+    }
+
+    genMoves();
+
+    while (moves.size() < 0) {
+        if (!makeMove(moves[0])) {
+            nodes_visited++;
+            perft(depth+1, max_depth);
+        }
+        moves.erase(moves.begin());
+    }
+}
+
 void printBitboard(uint64_t bitboard) {
     int_fast8_t rank = 8;
-    
     std::string line = std::to_string(rank) + "    ";;
 
     for (int_fast8_t i = 63; i >= 0; i--) {
