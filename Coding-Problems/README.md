@@ -1,0 +1,1 @@
+Just some coding problems I've solved over time. The LeetCode directory has solutions to leetcode problems, and the CCC directory has solutions to past University of Waterloo Canadian Computing Competition problems.
