@@ -15,19 +15,23 @@ using std::vector;
 using std::array;
 
 Perft::Perft(std::string FEN) {
-    depths_reached = { false, false, false, false, false, false };
     storeFEN(FEN);
+ 
+    depths_reached = { false, false, false, false, false, false };
+    start = std::chrono::high_resolution_clock::now();
 }
 
 void Perft::perft(int depth, int max_depth) {
-    // TODO add benchmarks
-
     if (depth == max_depth+1) {
         return;
     }
 
     if (depths_reached[depth] == false) {
-        clog << "perft(" << depth << "): " << nodes_visited << " nodes visited.\n";
+        stop = std::chrono::high_resolution_clock::now();
+        auto duration = std::chrono::duration_cast<std::chrono::seconds>(stop - start).count();
+
+        clog << "perft(" << depth << "): " << nodes_visited 
+             << " nodes visited in " << duration << " seconds.\n";
         depths_reached[depth] = true;
     }
 
@@ -37,6 +41,7 @@ void Perft::perft(int depth, int max_depth) {
         if (!makeMove(moves[0])) {
             nodes_visited++;
             perft(depth+1, max_depth);
+            unmakeMove(moves[0]);
         }
         moves.erase(moves.begin());
     }

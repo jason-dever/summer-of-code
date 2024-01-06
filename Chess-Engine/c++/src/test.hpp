@@ -5,6 +5,7 @@
 #include <array>
 #include <vector>
 #include <string>
+#include <chrono>
 
 struct TestResult {
     int overhead;
@@ -16,6 +17,9 @@ struct TestResult {
 struct Perft : Board{
     int nodes_visited = 0;
     std::vector<bool> depths_reached;
+
+    std::chrono::_V2::system_clock::time_point start;
+    std::chrono::_V2::system_clock::time_point stop;
 
     Perft(std::string); 
     void perft(const int, const int);
