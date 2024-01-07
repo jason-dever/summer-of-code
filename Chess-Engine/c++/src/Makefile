@@ -3,7 +3,7 @@ out := ../build/
 CXX := g++
 CXXFLAGS := -Wall -Werror -Wpedantic -O3 -march=znver3 -Warray-bounds=0
 
-objects := $(out)main.o $(out)board.o $(out)position.o $(out)precompute.o $(out)test.o
+objects := $(addprefix $(out), main.o board.o position.o precompute.o test.o)
 
 $(out)engine: $(objects)
 	$(CXX) $(CXXFLAGS) $^ -o $@
@@ -23,7 +23,12 @@ $(out)precompute.o: precompute.cpp precompute.hpp
 $(out)test.o: test.cpp test.hpp board.hpp
 	$(CXX) $(CXXFLAGS) -c $< -o $@
 
+$(objects): | $(out)
+
+$(out):
+	mkdir $(out)
+
 clean:
-	rm -f $(out)*.o $(out)engine
+	rm -rf $(out)
 
 .PHONY: clean

@@ -1,9 +1,8 @@
-CXXFLAGS := -I include/ -L lib/ -lraylib -lopengl32 -lgdi32 -lwinmm
+CXXFLAGS := -march=znver3 -lraylib -lGL -lm -lpthread -ldl -lrt -lX11
 
 main: main.cpp
 	g++ $^ -o $@ $(CXXFLAGS)
-
 clean:
-	del *.exe
+	rm -f main
 
 .PHONY: clean
