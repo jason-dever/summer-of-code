@@ -1,6 +1,6 @@
 #include <iostream>
-#include "include/raylib.h"
-#include <intrin.h>
+#include <raylib.h>
+#include <immintrin.h>
 #include <unordered_map>
 
 #define GREY CLITERAL(Color) { 30, 30, 30, 255 }
