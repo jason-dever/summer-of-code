@@ -152,7 +152,7 @@ void drawBoard(unsigned int board, Texture2D x, Texture2D o) {
     unsigned long index;
 
     while (board) {
-        _BitScanForward(&index, board);
+        index = _tzcnt_u32(board);
 
         if (index <= 8) {
             DrawTexture(o, sq_bounds[index].x + 30, sq_bounds[index].y + 30, RED);
@@ -193,7 +193,7 @@ int miniMax(unsigned int board) {
         highest_move_index++;
 
         move = (o_turn << 9);
-        _BitScanForward(&lsb_index, legal_moves);
+        lsb_index = _tzcnt_u16(legal_moves);
         move |= (1U << lsb_index);
 
         makeMove(&board, move);
