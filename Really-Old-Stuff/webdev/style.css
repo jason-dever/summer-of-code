@@ -1,0 +1,36 @@
+body {
+    margin: 0;
+}
+
+.header_container {
+    background-color: grey;
+    height: 60px;
+    display: flex;
+}
+
+.logo_container {
+    height: 60px;
+    width: 60px;
+    background-color: black;
+}
+
+.menu_container {
+    height: 60px;
+    width: 60px;
+    margin-left: auto;
+}
+
+#snake_game_container {
+    width: 960px;
+    height: 960px;
+    margin: 60px;
+    padding: 8px;
+    background-color: black;
+}
+
+#menu {
+    width: 50px;
+    height: 50px;
+    margin-top: 5px;
+    margin-left: 5px;
+}
