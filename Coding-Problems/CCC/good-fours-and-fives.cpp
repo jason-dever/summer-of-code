@@ -1,9 +1,9 @@
 #include <iostream>
 
 void countSolutions(int num, int& num_ways) {
-    if (num == 0) {
+    if (num == 0)
         ++num_ways;
-    }
+    
     if (num <= 3)
         return;
 
