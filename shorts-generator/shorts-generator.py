@@ -4,8 +4,9 @@ import os
 import random
 import torch
 from TTS.api import TTS
+import whisper_timestamped as whisper
 
-video_end_buffer = 1.25
+video_end_buffer = 0.5
 
 def generateSpeech(text, speech_path):
     device = "cuda"
@@ -34,11 +35,30 @@ def getSpeechWithMusic(speech_path, music_path):
 
     return final_audio
 
-def getShortWithVideo(audio, video_path):
-    gameplay = getTrimmedClip(VideoFileClip(video_path), audio.duration)
-    short = gameplay.with_audio(audio)
+def getShortWithVideo(audio_clip, video_path):
+    gameplay = getTrimmedClip(VideoFileClip(video_path), audio_clip.duration)
+    short = gameplay.with_audio(audio_clip)
 
     return short
+
+def getShortWithSubtitles(video_clip, audio_path):
+    model = whisper.load_model("medium.en")
+    result = whisper.transcribe(model, audio_path)
+
+    short = [video_clip]
+
+    segments = result["segments"]
+    for segment in segments:
+        for word in segment["words"]:
+            text = word["text"]
+            start = word["start"]
+            end = word["end"]
+
+            text_clip = TextClip(text, font="IBM-Plex-Sans", method="caption", align="center", size = video_clip.size, font_size=75, color="white")
+            short.append(text_clip.with_duration(end-start).with_start(start))
+
+    return CompositeVideoClip(short)
+
 
 def filesExist(*args):
     files_exist = True
@@ -64,8 +84,10 @@ def generateShort(text, name):
     output_path = f"out/{name}.mp4"
 
     generateSpeech(text, speech_path)
+
     audio = getSpeechWithMusic(speech_path, music_path)
-    short = getShortWithVideo(audio, video_path)
+    blank_short = getShortWithVideo(audio, video_path)
+    short = getShortWithSubtitles(blank_short, speech_path)
 
     short.write_videofile(output_path)
     os.remove(speech_path)
@@ -86,7 +108,6 @@ def main():
         return
 
     text = ""
-
     if args.file:
         text = open(args.file).read()
     elif args.text:
