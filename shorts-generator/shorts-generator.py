@@ -54,7 +54,7 @@ def getShortWithSubtitles(video_clip, audio_path):
             start = word["start"]
             end = word["end"]
 
-            text_clip = TextClip(text, font="IBM-Plex-Sans", method="caption", align="center", size = video_clip.size, font_size=75, color="white")
+            text_clip = TextClip(text, font="Noto-Sans-Bold", method="caption", align="center", size = video_clip.size, font_size=80, stroke_color="black", stroke_width=4, color="white")
             short.append(text_clip.with_duration(end-start).with_start(start))
 
     return CompositeVideoClip(short)
