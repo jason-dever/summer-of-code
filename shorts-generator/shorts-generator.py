@@ -21,16 +21,8 @@ def main():
         print("No text to create a short from. Aborting.")
         return
 
-    text = ""
-    if args.file:
-        text = open(args.file).read()
-    elif args.text:
-        text = args.text
-
-    if args.name:
-        name = args.name
-    else:
-        name = "short"
+    text = args.text if args.text else open(args.file).read()
+    name = args.name if args.name else "short"
 
     generateShort(text, name)
 
