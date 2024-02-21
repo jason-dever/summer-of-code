@@ -11,6 +11,8 @@ def main():
     parser.add_argument("-t", "--text", help="text to be put into shorts form; only use this if you are not using --file")
     parser.add_argument("-f", "--file", help="name of the file to read from; only use this if you are not using --text")
     parser.add_argument("-n", "--name", help="name of the output file; files are written as mp4 by default.")
+    parser.add_argument("-m", "--music", help="path to the music used to play over the video. default is resources/music.mp3.")
+    parser.add_argument("-v", "--video", help="path to the video used to play over the audio. default is resources/video.mp4.")
     args = parser.parse_args()
 
     if args.file and args.text:
@@ -23,12 +25,12 @@ def main():
 
     text = args.text if args.text else open(args.file).read()
     name = args.name if args.name else "short"
+    music_path = args.music if args.music else "resources/music.mp3"
+    video_path = args.video if args.video else "resources/video.mp4"
 
-    generateShort(text, name)
+    generateShort(text, name, music_path, video_path)
 
-def generateShort(text, name):
-    music_path = "resources/music.mp3"
-    video_path = "resources/gameplay.mp4"
+def generateShort(text, name, music_path, video_path):
     if not filesExist(music_path, video_path):
         print("\nNecessary resources to build the short do not exist. Aborting.")
         return
