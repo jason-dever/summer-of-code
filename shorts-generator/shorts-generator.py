@@ -2,7 +2,6 @@ import argparse
 from moviepy import *
 import os
 import random
-import torch
 from TTS.api import TTS
 import whisper_timestamped as whisper
 
