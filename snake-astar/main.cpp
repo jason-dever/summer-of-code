@@ -159,8 +159,6 @@ void findDirection(std::vector<Coordinate>& SSL, Coordinate& food, Coordinate& d
     cost_to_reach[food] = 0;
 
     while (!open_list.empty()) {
-        auto a = open_list;
-
         auto current = open_list.top().second;
         open_list.pop();
 
