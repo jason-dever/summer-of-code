@@ -33,9 +33,9 @@ fn make_move(board: &mut Board, mmove: u16) {
         idx += 1;
         num_pebbles -= 1;
 
-        println!("pebbles: {num_pebbles}, idx: {idx}");
+        // println!("pebbles: {num_pebbles}, idx: {idx}");
 
-        if idx == NUM_HOLES.try_into().unwrap() || idx == -1 { // Placing on someone's store
+        if idx == NUM_HOLES.try_into().unwrap() { // Placing on someone's store
             if side_placing_on == board.turn {
                 board.scores[board.turn as usize] += 1;
             }
@@ -63,7 +63,8 @@ fn make_move(board: &mut Board, mmove: u16) {
         board.capture_stack.push(num_pebbles_captured);
         board.scores[usize::from(board.turn)] += num_pebbles_captured
     }
-    board.turn = if idx == NUM_HOLES.try_into().unwrap() { board.turn } else { !board.turn };
+    // println!("idx: {idx}, holes: {NUM_HOLES}");
+    board.turn = if idx == -1 { board.turn } else { !board.turn };
 }
 
 fn unmake_move(board: &mut Board, mmove: u16) {
@@ -104,11 +105,11 @@ fn main() {
         capture_stack: Vec::with_capacity(NUM_HOLES*2),
     };
     print_board(&board);
-    let new_move = 0xaa;
+    let mut new_move = 0xaa;
     // let mut new_move = 0x40;
     make_move(&mut board, new_move);
     print_board(&board);
-    // new_move = 0x47;
-    // make_move(&mut board, new_move);
-    // print_board(&board);
+    new_move = 0x53;
+    make_move(&mut board, new_move);
+    print_board(&board);
 }
