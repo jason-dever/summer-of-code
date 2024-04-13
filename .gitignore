@@ -1,3 +1,4 @@
 **/build/
 Arduino/libraries/
 shorts-generator/**/
+target/
