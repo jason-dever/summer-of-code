@@ -17,13 +17,12 @@ fn print_board(board: &Board) {
 
 /* Moves are stored in this format:
 * bit 0: turn before the move was played
-* bits 1..3: index of pebbles being moved
-* bits 3..: number of pebbles being moved
+* bits 1..4: index of pebbles being moved
+* bits 4..: number of pebbles being moved
 */
 
 fn make_move(board: &mut Board, mmove: u16) {
     let mut idx: i8 = (((mmove >> 1) & 0x7)) as i8;
-    let direction: i8 = if board.turn { -1 } else { 1 };
 
     board.pebbles[usize::from(board.turn)][idx as usize] = 0;
 
@@ -31,10 +30,10 @@ fn make_move(board: &mut Board, mmove: u16) {
     let mut side_placing_on = board.turn;
 
     while num_pebbles > 0 {
-        idx += direction;
+        idx += 1;
         num_pebbles -= 1;
 
-        // println!("pebbles: {num_pebbles}, idx: {idx}");
+        println!("pebbles: {num_pebbles}, idx: {idx}");
 
         if idx == NUM_HOLES.try_into().unwrap() || idx == -1 { // Placing on someone's store
             if side_placing_on == board.turn {
@@ -47,7 +46,7 @@ fn make_move(board: &mut Board, mmove: u16) {
                 num_pebbles += 1;
             }
 
-            idx = if board.turn { 6 } else { -1 };
+            idx = -1;
             // println!("this deviousness");
             side_placing_on = !side_placing_on;
         }
@@ -99,16 +98,17 @@ fn unmake_move(board: &mut Board, mmove: u16) {
 
 fn main() {
     let mut board = Board {
-        pebbles: [[4, 4, 4, 4, 0, 10], [4, 4, 4, 4, 4, 4]],
+        pebbles: [[4, 4, 0, 4, 0, 10], [4, 4, 4, 0, 4, 4]],
         scores: [0, 0],
         turn: false,
         capture_stack: Vec::with_capacity(NUM_HOLES*2),
     };
     print_board(&board);
-    let mut new_move = 0x40;
+    let new_move = 0xaa;
+    // let mut new_move = 0x40;
     make_move(&mut board, new_move);
     print_board(&board);
-    new_move = 0x47;
-    make_move(&mut board, new_move);
-    print_board(&board);
+    // new_move = 0x47;
+    // make_move(&mut board, new_move);
+    // print_board(&board);
 }
