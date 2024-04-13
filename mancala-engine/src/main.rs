@@ -9,7 +9,7 @@ struct Board {
 
 fn print_board(board: &Board) {
     for i in 0..NUM_HOLES {
-        println!("{} {}", board.pebbles[0][i], board.pebbles[1][NUM_HOLES-i-1]);
+        println!("{:2} {:2}", board.pebbles[0][i], board.pebbles[1][NUM_HOLES-i-1]);
     }
     println!("scores: {}, {}", board.scores[0], board.scores[1]);
     println!("turn: {}", board.turn);
@@ -22,19 +22,23 @@ fn print_board(board: &Board) {
 */
 
 fn make_move(board: &mut Board, mmove: u16) {
-    let mut idx: usize = (((mmove >> 1) & 0x7)+1).into();
-    board.pebbles[usize::from(board.turn)][idx] = 0;
+    let mut idx: i8 = (((mmove >> 1) & 0x7)) as i8;
+    let direction: i8 = if board.turn { -1 } else { 1 };
+
+    board.pebbles[usize::from(board.turn)][idx as usize] = 0;
 
     let mut num_pebbles = mmove >> 4;
     let mut side_placing_on = board.turn;
-    let mut new_turn = !board.turn;
 
     while num_pebbles > 0 {
+        idx += direction;
         num_pebbles -= 1;
 
-        if idx == NUM_HOLES { // Placing on someone's store
+        // println!("pebbles: {num_pebbles}, idx: {idx}");
+
+        if idx == NUM_HOLES.try_into().unwrap() || idx == -1 { // Placing on someone's store
             if side_placing_on == board.turn {
-                board.scores[usize::from(board.turn)] += 1;
+                board.scores[board.turn as usize] += 1;
             }
             else {
                 // Num pebbles was decremented assuming that a pebble was
@@ -43,28 +47,24 @@ fn make_move(board: &mut Board, mmove: u16) {
                 num_pebbles += 1;
             }
 
-            idx = 0; 
+            idx = if board.turn { 6 } else { -1 };
+            // println!("this deviousness");
             side_placing_on = !side_placing_on;
         }
         else {
-            board.pebbles[usize::from(side_placing_on)][idx] += 1;
-            idx += 1;
+            board.pebbles[usize::from(side_placing_on)][idx as usize] += 1;
         }
     }
     // Checks for free turn and captures
-    if side_placing_on == board.turn {
-        if idx == NUM_HOLES  {
-            new_turn = board.turn;
-        }
-        else if board.pebbles[usize::from(side_placing_on)][idx] == 0 {
-            let num_pebbles_captured = board.pebbles[usize::from(!side_placing_on)][idx];
-            board.pebbles[usize::from(!side_placing_on)][idx] = 0;
+    if side_placing_on == board.turn && board.pebbles[usize::from(board.turn)][idx as usize] == 1 {
+        let num_pebbles_captured = board.pebbles[usize::from(!board.turn)][5-idx as usize] + 1;
+        board.pebbles[usize::from(!board.turn)][5-idx as usize] = 0;
+        board.pebbles[usize::from(board.turn)][idx as usize] = 0;
 
-            board.capture_stack.push(num_pebbles_captured);
-            board.scores[usize::from(board.turn)] += num_pebbles_captured
-        }
+        board.capture_stack.push(num_pebbles_captured);
+        board.scores[usize::from(board.turn)] += num_pebbles_captured
     }
-    board.turn = new_turn;
+    board.turn = if idx == NUM_HOLES.try_into().unwrap() { board.turn } else { !board.turn };
 }
 
 fn unmake_move(board: &mut Board, mmove: u16) {
@@ -105,7 +105,10 @@ fn main() {
         capture_stack: Vec::with_capacity(NUM_HOLES*2),
     };
     print_board(&board);
-    let new_move = 0x40;
+    let mut new_move = 0x40;
+    make_move(&mut board, new_move);
+    print_board(&board);
+    new_move = 0x47;
     make_move(&mut board, new_move);
     print_board(&board);
 }
