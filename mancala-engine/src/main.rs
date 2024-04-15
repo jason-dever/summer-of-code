@@ -1,6 +1,6 @@
 const NUM_HOLES: usize = 6;
 
-#[derive(Clone, PartialEq, Eq)]
+#[derive(Clone, PartialEq)]
 struct Board {
     pebbles: [[i16; NUM_HOLES]; 2],
     scores: [i16; 2],
