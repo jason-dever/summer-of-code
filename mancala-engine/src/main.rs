@@ -105,16 +105,24 @@ fn unmake_move(board: &mut Board, move_: i16) {
 }
 
 fn print_board(board: &Board) {
+    println!("-------------------");
+    println!("|                 |");
+    println!("|       {:2}        |", board.scores[1]);
+    println!("|                 |");
+    println!("-------------------");
+
     for i in 0..NUM_POCKETS {
-        println!("{:2} {:2}", board.pebbles[0][i], board.pebbles[1][NUM_POCKETS-i-1]);
+        println!("|        |        | ");
+        println!("|  {:2}    |  {:2}    |", board.pebbles[0][i], board.pebbles[1][NUM_POCKETS-i-1]);
+        println!("|        |        | ");
+        println!("-------------------");
     }
-    println!("scores: {}, {}", board.scores[0], board.scores[1]);
+
+    println!("|                 |");
+    println!("|       {:2}        |", board.scores[0]);
+    println!("|                 |");
+    println!("-------------------");
     println!("turn: {}", board.turn);
-    print!("[ ");
-    for val in &board.capture_stack {
-        print!("{val}, ");
-    }
-    println!("]\n");
 }
 
 fn perft(board: &mut Board, depth: i32) -> i32 {
