@@ -1,8 +1,8 @@
-const NUM_HOLES: usize = 6;
+const NUM_POCKETS: usize = 6;
 
 #[derive(Clone, PartialEq)]
 struct Board {
-    pebbles: [[i16; NUM_HOLES]; 2],
+    pebbles: [[i16; NUM_POCKETS]; 2],
     scores: [i16; 2],
     turn: bool,
     capture_stack: Vec<i16>,
@@ -26,7 +26,7 @@ fn make_move(board: &mut Board, move_: i16) {
         idx += 1;
         num_pebbles -= 1;
 
-        if idx != NUM_HOLES.try_into().unwrap() {
+        if idx != NUM_POCKETS.try_into().unwrap() {
             board.pebbles[side_placing_on as usize][idx as usize] += 1;
         }
         else {
@@ -66,7 +66,7 @@ fn unmake_move(board: &mut Board, move_: i16) {
         idx += 1;
         num_pebbles -= 1;
 
-        if idx != NUM_HOLES.try_into().unwrap() { 
+        if idx != NUM_POCKETS.try_into().unwrap() { 
             board.pebbles[side_placing_on as usize][idx as usize] -= 1;
         }
         else {
@@ -93,9 +93,9 @@ fn unmake_move(board: &mut Board, move_: i16) {
 
         // This is needed to ensure that we restore the right number of 
         // pebbles to the opponent. If we have looped around once when making 
-        // the move, then the opponent will have one more pebble in the hole
+        // the move, then the opponent will have one more pebble in the pocket
         // being captured than they had before the move was made.
-        if ((move_ >> 1) & 0x7) + (move_ >> 4) >= (2*NUM_HOLES + 1).try_into().unwrap() {
+        if ((move_ >> 1) & 0x7) + (move_ >> 4) >= (2*NUM_POCKETS + 1).try_into().unwrap() {
             capture_amount -= 1;
         }
 
@@ -105,8 +105,8 @@ fn unmake_move(board: &mut Board, move_: i16) {
 }
 
 fn print_board(board: &Board) {
-    for i in 0..NUM_HOLES {
-        println!("{:2} {:2}", board.pebbles[0][i], board.pebbles[1][NUM_HOLES-i-1]);
+    for i in 0..NUM_POCKETS {
+        println!("{:2} {:2}", board.pebbles[0][i], board.pebbles[1][NUM_POCKETS-i-1]);
     }
     println!("scores: {}, {}", board.scores[0], board.scores[1]);
     println!("turn: {}", board.turn);
@@ -115,6 +115,26 @@ fn print_board(board: &Board) {
         print!("{val}, ");
     }
     println!("]\n");
+}
+
+fn perft(board: &mut Board, depth: i32) -> i32 {
+    if depth == 0 {
+        return 1;
+    }
+
+    let mut num_nodes = 0;
+    for i in 0..NUM_POCKETS {
+        let num_pebbles = board.pebbles[board.turn as usize][i];
+
+        if num_pebbles != 0 {
+            let move_ = (board.turn) as i16 | (i << 1) as i16 | (num_pebbles << 4) as i16;
+
+            make_move(board, move_);
+            num_nodes += perft(board, depth-1);
+            unmake_move(board, move_);
+        }
+    }
+    return num_nodes;
 }
 
 #[cfg(test)]
@@ -210,5 +230,19 @@ mod tests {
 }
 
 fn main() {
+    use std::time::Instant;
 
+    let mut board = Board {
+        pebbles: [[4, 4, 4, 4, 4, 4], [4, 4, 4, 4, 4, 4]],
+        scores: [0, 0],
+        turn: false,
+        capture_stack: vec![],
+    };
+
+    for depth in 1..11 {
+        let timer = Instant::now();
+        let num_nodes = perft(&mut board, depth);
+
+        println!("perft depth {}: {} nodes, {:.2?}", depth, num_nodes, timer.elapsed());
+    }
 }
