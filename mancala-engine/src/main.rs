@@ -5,7 +5,6 @@ struct Board {
     pebbles: [[i16; NUM_POCKETS]; 2],
     scores: [i16; 2],
     turn: bool,
-    capture_stack: Vec<i16>,
 }
 
 fn make_move(board: &mut Board, mut idx: i16) {
@@ -41,7 +40,6 @@ fn make_move(board: &mut Board, mut idx: i16) {
         board.pebbles[!board.turn as usize][5-idx as usize] = 0;
         board.pebbles[board.turn as usize][idx as usize] = 0;
 
-        board.capture_stack.push(num_pebbles_captured);
         board.scores[board.turn as usize] += num_pebbles_captured+1
     }
     board.turn = if idx == -1 { board.turn } else { !board.turn };
@@ -66,7 +64,6 @@ fn print_board(board: &Board) {
     println!("|                 |");
     println!("-------------------");
     println!("turn: {}", board.turn);
-    println!("{:?}", board.capture_stack);
 }
 
 fn is_gameover(board: &Board) -> bool {
@@ -82,7 +79,7 @@ fn is_gameover(board: &Board) -> bool {
     return false;
 }
 
-fn perft(board: &mut Board, depth: i32) -> i32 {
+fn perft(board: &mut Board, depth: i32) -> u64 {
     if depth == 0 || is_gameover(board) {
         return 1;
     }
@@ -111,43 +108,36 @@ mod tests {
                 pebbles: [[4, 4, 0, 1, 0, 10], [4, 4, 4, 0, 4, 4]],
                 scores: [0, 0],
                 turn: false,
-                capture_stack: vec![],
             }, 
             Board {
                 pebbles: [[5, 5, 0, 1, 0, 0], [5, 5, 5, 0, 5, 5]],
                 scores: [3, 0],
                 turn: true,
-                capture_stack: vec![ 1 ],
             },
             Board {
                 pebbles: [[5, 5, 0, 1, 0, 0], [5, 0, 6, 1, 6, 6]],
                 scores: [3, 1],
                 turn: true,
-                capture_stack: vec![ 1 ],
             },
             Board {
                 pebbles: [[6, 6, 1, 2, 1, 0], [5, 0, 6, 1, 6, 0]],
                 scores: [3, 2],
                 turn: false,
-                capture_stack: vec![ 1 ],
             },
             Board {
                 pebbles: [[6, 6, 0, 3, 1, 0], [5, 0, 6, 1, 6, 0]],
                 scores: [3, 2],
                 turn: true,
-                capture_stack: vec![ 1 ],
             },
             Board {
                 pebbles: [[0, 6, 0, 3, 1, 0], [0, 1, 7, 2, 7, 0]],
                 scores: [3, 9],
                 turn: false,
-                capture_stack: vec![ 1, 6 ],
             },
             Board {
                 pebbles: [[0, 6, 0, 0, 2, 1], [0, 1, 7, 2, 7, 0]],
                 scores: [4, 9],
                 turn: false,
-                capture_stack: vec![ 1, 6 ],
             },
         ];
         let moves: Vec<i16> = vec! [
@@ -184,25 +174,21 @@ mod tests {
                 pebbles: [[4, 4, 0, 1, 0, 10], [4, 4, 4, 0, 4, 4]],
                 scores: [0, 0],
                 turn: false,
-                capture_stack: vec![],
             }, 
             Board {
                 pebbles: [[0, 0, 0, 0, 0, 0], [5, 5, 5, 0, 5, 5]],
                 scores: [3, 0],
                 turn: true,
-                capture_stack: vec![ 1 ],
             },
             Board {
                 pebbles: [[5, 5, 0, 1, 0, 0], [0, 0, 0, 0, 0, 0]],
                 scores: [3, 1],
                 turn: true,
-                capture_stack: vec![ 1 ],
             },
             Board {
                 pebbles: [[6, 6, 1, 2, 1, 0], [5, 0, 6, 1, 6, 0]],
                 scores: [3, 2],
                 turn: false,
-                capture_stack: vec![ 1 ],
             },
         ];
         let expected_output = vec! [ false, true, true, false ];
@@ -221,10 +207,9 @@ fn main() {
         pebbles: [[4, 4, 4, 4, 4, 4], [4, 4, 4, 4, 4, 4]],
         scores: [0, 0],
         turn: false,
-        capture_stack: vec![],
     };
 
-    for depth in 1..13 {
+    for depth in 1..15 {
         let timer = Instant::now();
         let num_nodes = perft(&mut board, depth);
 
