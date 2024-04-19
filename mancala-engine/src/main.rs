@@ -8,19 +8,11 @@ struct Board {
     capture_stack: Vec<i16>,
 }
 
-/* Moves are stored in this format:
-* bit 0: turn before the move was played
-* bits 1..4: index of pebbles being moved
-* bits 4..: number of pebbles being moved
-*/
-
-fn make_move(board: &mut Board, move_: i16) {
-    let mut idx: i16 = (((move_ >> 1) & 0x7)).into();
+fn make_move(board: &mut Board, mut idx: i16) {
+    let mut num_pebbles = board.pebbles[board.turn as usize][idx as usize];
+    let mut side_placing_on = board.turn;
 
     board.pebbles[board.turn as usize][idx as usize] = 0;
-
-    let mut num_pebbles = move_ >> 4;
-    let mut side_placing_on = board.turn;
 
     while num_pebbles > 0 {
         idx += 1;
@@ -55,55 +47,6 @@ fn make_move(board: &mut Board, move_: i16) {
     board.turn = if idx == -1 { board.turn } else { !board.turn };
 }
 
-fn unmake_move(board: &mut Board, move_: i16) {
-    board.turn = (move_ & 1) != 0;
-
-    let mut num_pebbles = move_ >> 4;
-    let mut side_placing_on = board.turn;
-    let mut idx: i16 = (((move_ >> 1) & 0x7)) as i16;
-
-    while num_pebbles > 0 {
-        idx += 1;
-        num_pebbles -= 1;
-
-        if idx != NUM_POCKETS.try_into().unwrap() { 
-            board.pebbles[side_placing_on as usize][idx as usize] -= 1;
-        }
-        else {
-            if side_placing_on == board.turn {
-                board.scores[board.turn as usize] -= 1;
-            }
-            else { 
-                // Same story as in make_move().
-                num_pebbles += 1;
-            }
-
-            idx = -1;
-            side_placing_on = !side_placing_on;
-        }
-    }
-    board.pebbles[board.turn as usize][((move_ >> 1) & 0x7) as usize] = (move_ >> 4).into();
-
-    // Undoing a capture
-    if side_placing_on == board.turn && board.pebbles[board.turn as usize][idx as usize] < 0 {
-        let mut capture_amount = board.capture_stack[board.capture_stack.len()-1];
-
-        board.scores[board.turn as usize] -= capture_amount+1; 
-        board.pebbles[board.turn as usize][idx as usize] = 0;
-
-        // This is needed to ensure that we restore the right number of 
-        // pebbles to the opponent. If we have looped around once when making 
-        // the move, then the opponent will have one more pebble in the pocket
-        // being captured than they had before the move was made.
-        if ((move_ >> 1) & 0x7) + (move_ >> 4) >= (2*NUM_POCKETS + 1).try_into().unwrap() {
-            capture_amount -= 1;
-        }
-
-        board.pebbles[!board.turn as usize][5-idx as usize] = capture_amount;
-        board.capture_stack.pop();
-    }
-}
-
 fn print_board(board: &Board) {
     println!("-------------------");
     println!("|                 |");
@@ -112,9 +55,9 @@ fn print_board(board: &Board) {
     println!("-------------------");
 
     for i in 0..NUM_POCKETS {
-        println!("|        |        | ");
+        println!("|        |        |");
         println!("|  {:2}    |  {:2}    |", board.pebbles[0][i], board.pebbles[1][NUM_POCKETS-i-1]);
-        println!("|        |        | ");
+        println!("|        |        |");
         println!("-------------------");
     }
 
@@ -123,10 +66,24 @@ fn print_board(board: &Board) {
     println!("|                 |");
     println!("-------------------");
     println!("turn: {}", board.turn);
+    println!("{:?}", board.capture_stack);
+}
+
+fn is_gameover(board: &Board) -> bool {
+    for row in board.pebbles {
+        let mut all_counts_zero = true;
+        for count in row {
+            all_counts_zero &= count == 0;
+        }
+        if all_counts_zero {
+            return true;
+        }
+    }
+    return false;
 }
 
 fn perft(board: &mut Board, depth: i32) -> i32 {
-    if depth == 0 {
+    if depth == 0 || is_gameover(board) {
         return 1;
     }
 
@@ -135,23 +92,21 @@ fn perft(board: &mut Board, depth: i32) -> i32 {
         let num_pebbles = board.pebbles[board.turn as usize][i];
 
         if num_pebbles != 0 {
-            let move_ = (board.turn) as i16 | (i << 1) as i16 | (num_pebbles << 4) as i16;
-
-            make_move(board, move_);
+            let before = board.clone();
+            make_move(board, i as i16);
             num_nodes += perft(board, depth-1);
-            unmake_move(board, move_);
+            *board = before;
         }
     }
     return num_nodes;
 }
-
 #[cfg(test)]
 mod tests {
     use crate::*;
 
     #[test]
-    fn make_unmake_moves() {
-        let mut boards:Vec<Board> = vec![
+    fn make_moves() {
+        let boards = vec![
             Board { 
                 pebbles: [[4, 4, 0, 1, 0, 10], [4, 4, 4, 0, 4, 4]],
                 scores: [0, 0],
@@ -195,45 +150,67 @@ mod tests {
                 capture_stack: vec![ 1, 6 ],
             },
         ];
-        let mut moves: Vec<i16> = vec! [
-            0xaa,
-            0x53,
-            0x6b,
-            0x14,
-            0x51,
-            0x36,
+        let moves: Vec<i16> = vec! [
+            5,
+            1,
+            5,
+            2,
+            0,
+            3,
         ];
 
-        let mut test_passed = true;
-        test_passed &= test_make_unmake_prototype(&boards, &moves, "make");
+        let mut board = boards[0].clone();
 
-        boards.reverse();
-        moves.reverse();
+        for i in 0..boards.len()-1 {
+            make_move(&mut board, moves[i]);
+            
+            if board != boards[i+1] {
+                println!("expected:");
+                print_board(&boards[i+1]);
+                println!("actual:, move: {}", moves[i]);
+                print_board(&board);
+                println!("previous");
+                print_board(&boards[i]);
 
-        test_passed &= test_make_unmake_prototype(&boards, &moves, "unmake");
-
-        if !test_passed {
-            panic!();
+                panic!();
+            }
         }
     }
 
-    fn test_make_unmake_prototype(boards: &Vec<Board>, moves: &Vec<i16>, move_type: &str) -> bool {
-        let mut board = boards[0].clone();
-        let perform_operation: fn(&mut Board, i16) = if move_type == "make" { make_move } else { unmake_move };
+    #[test]
+    fn gameover() {
+        let boards = vec! [
+            Board { 
+                pebbles: [[4, 4, 0, 1, 0, 10], [4, 4, 4, 0, 4, 4]],
+                scores: [0, 0],
+                turn: false,
+                capture_stack: vec![],
+            }, 
+            Board {
+                pebbles: [[0, 0, 0, 0, 0, 0], [5, 5, 5, 0, 5, 5]],
+                scores: [3, 0],
+                turn: true,
+                capture_stack: vec![ 1 ],
+            },
+            Board {
+                pebbles: [[5, 5, 0, 1, 0, 0], [0, 0, 0, 0, 0, 0]],
+                scores: [3, 1],
+                turn: true,
+                capture_stack: vec![ 1 ],
+            },
+            Board {
+                pebbles: [[6, 6, 1, 2, 1, 0], [5, 0, 6, 1, 6, 0]],
+                scores: [3, 2],
+                turn: false,
+                capture_stack: vec![ 1 ],
+            },
+        ];
+        let expected_output = vec! [ false, true, true, false ];
 
-        for i in 0..boards.len()-1 {
-            perform_operation(&mut board, moves[i]);
-            
-            if board != boards[i+1] {
-                println!("failed {move_type}! 0x{:x}", moves[i]);
-                print_board(&board);
-                print_board(&boards[i+1]);
-                print_board(&boards[i]);
-
-                return false;
-            }
+        for i in 0..boards.len() {
+            let board = &boards[i];
+            assert_eq!(is_gameover(board), expected_output[i]);
         }
-        return true;
     }
 }
 
@@ -247,7 +224,7 @@ fn main() {
         capture_stack: vec![],
     };
 
-    for depth in 1..11 {
+    for depth in 1..13 {
         let timer = Instant::now();
         let num_nodes = perft(&mut board, depth);
 
