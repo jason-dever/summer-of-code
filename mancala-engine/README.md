@@ -13,4 +13,6 @@ depth 6: 23169 nodes<br>
 depth 7: 113959 nodes<br>
 depth 8: 559885 nodes<br>
 depth 9: 2743126 nodes<br>
-depth 10: 13394143 nodes</p>
+depth 10: 13394139 nodes<br>
+depth 11: 65110578 nodes<br>
+depth 12: 314268576 nodes</p>
