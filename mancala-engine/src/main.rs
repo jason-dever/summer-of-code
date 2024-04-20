@@ -1,4 +1,9 @@
 const NUM_POCKETS: usize = 6;
+enum GameResult {
+    Draw,
+    P1Win,
+    P2Win,
+}
 
 #[derive(Clone, PartialEq)]
 struct Board {
@@ -77,6 +82,21 @@ fn is_gameover(board: &Board) -> bool {
         }
     }
     return false;
+}
+
+fn get_game_result(board: &Board) -> GameResult {
+    // It's assumed that the game is over when this fn is called.
+    let difference = board.scores[0] + board.pebbles[0].iter().sum::<i16>() - board.scores[1] - board.pebbles[1].iter().sum::<i16>();
+
+    if difference > 0 {
+        return GameResult::P1Win;
+    }
+    else if difference < 0 {
+        return GameResult::P2Win;
+    }
+    else {
+        return GameResult::Draw;
+    }
 }
 
 fn perft(board: &mut Board, depth: i32) -> u64 {
