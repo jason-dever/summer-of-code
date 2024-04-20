@@ -40,7 +40,7 @@ fn make_move(board: &mut Board, mut idx: i16) {
         }
     }
     // Checks for captures
-    if side_placing_on == board.turn && board.pebbles[board.turn as usize][idx as usize] == 1 {
+    if side_placing_on == board.turn && board.pebbles[board.turn as usize][idx as usize] == 1 && board.pebbles[!(board.turn) as usize][(5-idx) as usize] > 0 {
         let num_pebbles_captured = board.pebbles[!board.turn as usize][5-idx as usize];
         board.pebbles[!board.turn as usize][5-idx as usize] = 0;
         board.pebbles[board.turn as usize][idx as usize] = 0;
@@ -99,6 +99,61 @@ fn get_game_result(board: &Board) -> GameResult {
     }
 }
 
+fn eval(board: &Board) -> i64 {
+    return (board.scores[0] - board.scores[1]) as i64;
+}
+
+struct MiniMaxOutput {
+    best_move: usize,
+    eval: i64,
+}
+
+
+fn minimax(board: &mut Board, depth: i32) -> MiniMaxOutput {
+    if depth == 0 {
+        return MiniMaxOutput {
+            best_move: 0,
+            eval: eval(board),
+        }
+    }
+
+    if is_gameover(board) {
+        return MiniMaxOutput {
+            best_move: 0,
+            eval: match get_game_result(board) {
+                    GameResult::P1Win => 10000,
+                    GameResult::P2Win => -10000,
+                    GameResult::Draw => 0,
+            }
+        }
+    }
+
+    let mut best_idx = 0 ;
+    let mut best_score = if board.turn == true { i64::MAX } else { i64::MIN };
+    // let mut rewritten = false;
+    for i in 0..NUM_POCKETS {
+        if board.pebbles[board.turn as usize][i] != 0 {
+            let original = board.clone();
+            make_move(board, i as i16);
+
+            let move_score = minimax(board, depth-1).eval;
+            if (move_score > best_score) ^ original.turn {
+                // rewritten = true;
+                best_score = move_score;
+                best_idx = i;
+            }
+
+            *board = original;
+        }
+    }
+    // println!("{rewritten}");
+    return MiniMaxOutput {
+        best_move: best_idx,
+        eval: best_score,
+    };
+}
+
+
 fn perft(board: &mut Board, depth: i32) -> u64 {
     if depth == 0 || is_gameover(board) {
         return 1;
@@ -109,10 +164,10 @@ fn perft(board: &mut Board, depth: i32) -> u64 {
         let num_pebbles = board.pebbles[board.turn as usize][i];
 
         if num_pebbles != 0 {
-            let before = board.clone();
+            let original = board.clone();
             make_move(board, i as i16);
             num_nodes += perft(board, depth-1);
-            *board = before;
+            *board = original;
         }
     }
     return num_nodes;
@@ -221,7 +276,7 @@ mod tests {
 }
 
 fn main() {
-    use std::time::Instant;
+    // use std::time::Instant;
 
     let mut board = Board {
         pebbles: [[4, 4, 4, 4, 4, 4], [4, 4, 4, 4, 4, 4]],
@@ -229,10 +284,34 @@ fn main() {
         turn: false,
     };
 
-    for depth in 1..15 {
-        let timer = Instant::now();
-        let num_nodes = perft(&mut board, depth);
+    let test = minimax(&mut board, 4);
+    println!("{}, {}", test.eval, test.best_move);
 
-        println!("perft depth {}: {} nodes, {:.2?}", depth, num_nodes, timer.elapsed());
+    print_board(&board);
+    while !is_gameover(&board) {
+        let mut turn = board.turn;
+
+        while turn == board.turn {
+            let mut user_str = String::new();
+            println!("your turn");
+            std::io::stdin().read_line(&mut user_str).unwrap();
+            let idx = user_str.trim().parse::<i16>().unwrap();
+            make_move(&mut board, idx);
+            print_board(&board);
+        }
+
+        turn = board.turn;
+        while turn == board.turn {
+            let best_move = minimax(&mut board, 12).best_move;
+            println!("move: {best_move}, val: {}", board.pebbles[board.turn as usize][best_move]);
+            make_move(&mut board, best_move as i16);
+            print_board(&board);
+        }
     }
+    // for depth in 1..15 {
+    //     let timer = Instant::now();
+    //     let num_nodes = perft(&mut board, depth);
+
+    //     println!("perft depth {}: {} nodes, {:.2?}", depth, num_nodes, timer.elapsed());
+    // }
 }
