@@ -98,16 +98,8 @@ fn print_board(board: &Board) {
 }
 
 fn is_gameover(board: &Board) -> bool {
-    for row in board.pebbles {
-        let mut all_counts_zero = true;
-        for count in row {
-            all_counts_zero &= count == 0;
-        }
-        if all_counts_zero {
-            return true;
-        }
-    }
-    return false;
+    board.pebbles[0].iter().sum::<i16>() == 0 ||
+    board.pebbles[1].iter().sum::<i16>() == 0
 }
 
 fn get_game_result(board: &Board, game_type: char) -> GameResult {
