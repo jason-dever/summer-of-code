@@ -1,3 +1,6 @@
+use rand::distributions::{Uniform, Distribution};
+use rand::rngs::ThreadRng;
+
 const NUM_POCKETS: usize = 6;
 
 #[derive(PartialEq, Debug)]
@@ -55,6 +58,22 @@ fn make_move(board: &mut Board, mut idx: i16, game_type: char) {
         board.scores[board.turn as usize] += num_pebbles_captured+1
     }
     board.turn = if idx == -1 { board.turn } else { !board.turn };
+}
+
+fn gen_random_board(range: &Uniform<i16>, rng: &ThreadRng) -> Board {
+    let range = Uniform::new(1, 6);
+    let mut rng = rand::thread_rng();
+
+    let mut pebbles = [0; NUM_POCKETS];
+    for i in 0..NUM_POCKETS {
+        pebbles[i] = range.sample(&mut rng);
+    }
+
+    Board {
+        pebbles: [pebbles, pebbles.clone()],
+        scores: [0, 0],
+        turn: false,
+    }
 }
 
 fn print_board(board: &Board) {
@@ -308,13 +327,15 @@ fn main() {
     // use std::time::Instant;
 
     let mut board = Board {
-        pebbles: [[0, 6, 4, 4, 2, 5], [3, 4, 2, 2, 0, 1]],
-        scores: [0, 1],
+        pebbles: [[2, 1, 1, 1, 1, 2], [0, 0, 4, 9, 5, 1]],
+        scores: [6, 5],
         turn: false,
     };
-
+    
+    // let dist = Uniform::new(1, 6);
+    // let rng = rand::thread_rng();
     // println!("{}, {}", test.eval, test.best_move);
-    let game_type = 'c';
+    let game_type = 'a';
 
     print_board(&board);
     while !is_gameover(&board) {
