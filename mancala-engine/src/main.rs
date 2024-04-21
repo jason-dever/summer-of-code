@@ -121,7 +121,7 @@ struct MiniMaxOutput {
 }
 
 
-fn minimax(board: &mut Board, mut alpha: f64, mut beta: f64, depth: i32, game_type: char) -> MiniMaxOutput {
+fn alpha_beta(board: &mut Board, mut alpha: f64, mut beta: f64, depth: i32, game_type: char) -> MiniMaxOutput {
     if depth == 0 {
         return MiniMaxOutput {
             best_move: 0,
@@ -154,7 +154,7 @@ fn minimax(board: &mut Board, mut alpha: f64, mut beta: f64, depth: i32, game_ty
     for i in 0..NUM_POCKETS {
         if board.pebbles[board.turn as usize][i] != 0 {
             make_move(board, i as i16, game_type);
-            let move_score = minimax(board, alpha, beta, depth-1, game_type).eval;
+            let move_score = alpha_beta(board, alpha, beta, depth-1, game_type).eval;
 
             if (move_score > best_score) ^ original.turn {
                 best_score = move_score;
@@ -162,7 +162,7 @@ fn minimax(board: &mut Board, mut alpha: f64, mut beta: f64, depth: i32, game_ty
             }
 
             if original.turn == false { // Maximizer
-                if move_score > beta {
+                if move_score >= beta {
                     break;
                 }
                 alpha = if alpha > move_score { alpha } else { move_score };
@@ -307,14 +307,12 @@ mod tests {
 fn main() {
     // use std::time::Instant;
 
-    // engine_vs_engine(minimax2, minimax, 100);
     let mut board = Board {
         pebbles: [[0, 6, 4, 4, 2, 5], [3, 4, 2, 2, 0, 1]],
         scores: [0, 1],
         turn: false,
     };
 
-    // let test = minimax(&mut board, 4);
     // println!("{}, {}", test.eval, test.best_move);
     let game_type = 'c';
 
@@ -323,7 +321,7 @@ fn main() {
 
         let mut turn = board.turn;
         while turn == board.turn && !is_gameover(&board) {
-            let best_move = minimax(&mut board, f64::MIN, f64::MAX, 16, game_type).best_move;
+            let best_move = alpha_beta(&mut board, f64::MIN, f64::MAX, 16, game_type).best_move;
             println!("move: {best_move}, val: {}", board.pebbles[board.turn as usize][best_move]);
             make_move(&mut board, best_move as i16, game_type);
             print_board(&board);
