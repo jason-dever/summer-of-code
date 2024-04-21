@@ -60,13 +60,10 @@ fn make_move(board: &mut Board, mut idx: i16, game_type: char) {
     board.turn = if idx == -1 { board.turn } else { !board.turn };
 }
 
-fn gen_random_board(range: &Uniform<i16>, rng: &ThreadRng) -> Board {
-    let range = Uniform::new(1, 6);
-    let mut rng = rand::thread_rng();
-
+fn gen_random_board(range: &Uniform<i16>, rng: &mut ThreadRng) -> Board {
     let mut pebbles = [0; NUM_POCKETS];
     for i in 0..NUM_POCKETS {
-        pebbles[i] = range.sample(&mut rng);
+        pebbles[i] = range.sample(rng);
     }
 
     Board {
@@ -319,8 +316,8 @@ fn main() {
     // use std::time::Instant;
 
     let mut board = Board {
-        pebbles: [[2, 1, 1, 1, 1, 2], [0, 0, 4, 9, 5, 1]],
-        scores: [6, 5],
+        pebbles: [[1, 2, 2, 2, 1, 2], [1, 1, 1, 0, 7, 3]],
+        scores: [9, 6],
         turn: false,
     };
     
