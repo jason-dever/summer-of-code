@@ -73,6 +73,50 @@ fn gen_random_board(range: &Uniform<i16>, rng: &mut ThreadRng) -> Board {
     }
 }
 
+fn engine_vs_engine(a1: fn(&mut Board, f64, f64, i32, char) -> MiniMaxOutput, 
+                    a2: fn(&mut Board, f64, f64, i32, char) -> MiniMaxOutput, 
+                    num_games: i32,
+                    game_type: char) {
+
+    use std::collections::HashMap;
+    let mut win_counts = HashMap::from([(a1, 0), (a2, 0)]);
+    let mut draws = 0;
+
+    let mut player1 = a1;
+    let mut player2 = a2;
+
+    let dist = Uniform::new(1, 6);
+    let mut rng = rand::thread_rng();
+
+    for _i in 0..num_games {
+        println!("{_i}");
+        let mut board = gen_random_board(&dist, &mut rng);
+
+        while !is_gameover(&board) {
+            while !board.turn && !is_gameover(&board) {
+                let best_move = player1(&mut board, f64::MIN, f64::MAX, 10, game_type).best_move as i16;
+                make_move(&mut board, best_move, game_type);
+            }
+            while board.turn && !is_gameover(&board) {
+                let best_move = player2(&mut board, f64::MIN, f64::MAX, 10, game_type).best_move as i16;
+                make_move(&mut board, best_move, game_type);
+            }
+        }
+
+        match get_game_result(&board, game_type) {
+            GameResult::P1Win => *win_counts.get_mut(&player1).unwrap() += 1,
+            GameResult::P2Win => *win_counts.get_mut(&player2).unwrap() += 1,
+            GameResult::Draw => draws += 1,
+        };
+        std::mem::swap(&mut player1, &mut player2);
+    }
+    let a1_winrate = 100.0*(win_counts[&a1] as f32)/(num_games as f32);
+    let a2_winrate = 100.0*(win_counts[&a2] as f32)/(num_games as f32);
+    let draw_rate = 100.0*(draws as f32)/(num_games as f32);
+
+    println!("algorithm 1 winrate: {}%\nalgorithm 2 winrate: {}%\ndraw rate: {}%", a1_winrate, a2_winrate, draw_rate);
+}
+
 fn print_board(board: &Board) {
     println!("-------------------");
     println!("|                 |");
@@ -315,55 +359,53 @@ mod tests {
 fn main() {
     // use std::time::Instant;
 
-    let mut board = Board {
-        pebbles: [[1, 2, 2, 2, 1, 2], [1, 1, 1, 0, 7, 3]],
-        scores: [9, 6],
-        turn: false,
-    };
+    // let mut board = Board {
+    //     pebbles: [[3, 3, 5, 1, 1, 3], [2, 3, 0, 2, 2, 4]],
+    //     scores: [0, 1],
+    //     turn: false,
+    // };
     
-    // let dist = Uniform::new(1, 6);
-    // let rng = rand::thread_rng();
-    // println!("{}, {}", test.eval, test.best_move);
-    let game_type = 'a';
+    // // println!("{}, {}", test.eval, test.best_move);
+    // let game_type = 'c';
 
-    print_board(&board);
-    while !is_gameover(&board) {
+    // print_board(&board);
+    // while !is_gameover(&board) {
 
-        let mut turn = board.turn;
-        while turn == board.turn && !is_gameover(&board) {
-            let best_move = alpha_beta(&mut board, f64::MIN, f64::MAX, 16, game_type).best_move;
-            println!("move: {best_move}, val: {}", board.pebbles[board.turn as usize][best_move]);
-            make_move(&mut board, best_move as i16, game_type);
-            print_board(&board);
-        }
-        turn = board.turn;
-        while turn == board.turn && !is_gameover(&board) {
-            let mut user_str = String::new();
-            println!("your turn");
-            std::io::stdin().read_line(&mut user_str).unwrap();
-            let idx = user_str.trim().parse::<i16>().unwrap();
-            make_move(&mut board, idx, game_type);
-            print_board(&board);
-        }
+    //     let mut turn = board.turn;
+    //     while turn == board.turn && !is_gameover(&board) {
+    //         let best_move = alpha_beta(&mut board, f64::MIN, f64::MAX, 16, game_type).best_move;
+    //         println!("move: {best_move}, val: {}", board.pebbles[board.turn as usize][best_move]);
+    //         make_move(&mut board, best_move as i16, game_type);
+    //         print_board(&board);
+    //     }
+    //     turn = board.turn;
+    //     while turn == board.turn && !is_gameover(&board) {
+    //         let mut user_str = String::new();
+    //         println!("your turn");
+    //         std::io::stdin().read_line(&mut user_str).unwrap();
+    //         let idx = user_str.trim().parse::<i16>().unwrap();
+    //         make_move(&mut board, idx, game_type);
+    //         print_board(&board);
+    //     }
 
-    }
-    if game_type == 'c' {
-        for i in 0..=1 {
-            let mut sum = 0;
-
-            for j in 0..board.pebbles[i].len() {
-                let count = board.pebbles[i][j];
-                sum += count;
-                board.pebbles[i][j] = 0;
-            }
-            board.scores[i] += sum;
-        }
-    }
-    print_board(&board);
-    // for depth in 1..15 {
-    //     let timer = Instant::now();
-    //     let num_nodes = perft(&mut board, depth);
-
-    //     println!("perft depth {}: {} nodes, {:.2?}", depth, num_nodes, timer.elapsed());
     // }
+    // if game_type == 'c' {
+    //     for i in 0..=1 {
+    //         let mut sum = 0;
+
+    //         for j in 0..board.pebbles[i].len() {
+    //             let count = board.pebbles[i][j];
+    //             sum += count;
+    //             board.pebbles[i][j] = 0;
+    //         }
+    //         board.scores[i] += sum;
+    //     }
+    // }
+    // print_board(&board);
+    // // for depth in 1..15 {
+    // //     let timer = Instant::now();
+    // //     let num_nodes = perft(&mut board, depth);
+
+    // //     println!("perft depth {}: {} nodes, {:.2?}", depth, num_nodes, timer.elapsed());
+    // // }
 }
