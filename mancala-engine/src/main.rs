@@ -12,23 +12,23 @@ enum GameResult {
 
 #[derive(Clone, PartialEq)]
 struct Board {
-    pebbles: [[i16; NUM_POCKETS]; 2],
+    stones: [[i16; NUM_POCKETS]; 2],
     scores: [i16; 2],
     turn: bool,
 }
 
 fn make_move(board: &mut Board, mut idx: i16, game_type: char) {
-    let mut num_pebbles = board.pebbles[board.turn as usize][idx as usize];
+    let mut num_stones = board.stones[board.turn as usize][idx as usize];
     let mut side_placing_on = board.turn;
 
-    board.pebbles[board.turn as usize][idx as usize] = 0;
+    board.stones[board.turn as usize][idx as usize] = 0;
 
-    while num_pebbles > 0 {
+    while num_stones > 0 {
         idx += 1;
-        num_pebbles -= 1;
+        num_stones -= 1;
 
         if idx != NUM_POCKETS.try_into().unwrap() {
-            board.pebbles[side_placing_on as usize][idx as usize] += 1;
+            board.stones[side_placing_on as usize][idx as usize] += 1;
         }
         else {
             if side_placing_on == board.turn {
@@ -37,37 +37,37 @@ fn make_move(board: &mut Board, mut idx: i16, game_type: char) {
             else {
                 // On opponent's store, we aren't actually placing
                 // on anything this iteration.
-               num_pebbles += 1;
+               num_stones += 1;
             }
 
             idx = -1;
             side_placing_on = !side_placing_on;
         }
-        if game_type == 'a' && num_pebbles == 0 && idx != -1 && board.pebbles[side_placing_on as usize][idx as usize] > 1 {
-            num_pebbles = board.pebbles[side_placing_on as usize][idx as usize];
-            board.pebbles[side_placing_on as usize][idx as usize] = 0;
+        if game_type == 'a' && num_stones == 0 && idx != -1 && board.stones[side_placing_on as usize][idx as usize] > 1 {
+            num_stones = board.stones[side_placing_on as usize][idx as usize];
+            board.stones[side_placing_on as usize][idx as usize] = 0;
             // println!("update: {idx}");
         }
     }
     // Checks for captures
-    if game_type == 'c' && side_placing_on == board.turn && board.pebbles[board.turn as usize][idx as usize] == 1 && board.pebbles[!(board.turn) as usize][(5-idx) as usize] > 0 {
-        let num_pebbles_captured = board.pebbles[!board.turn as usize][5-idx as usize];
-        board.pebbles[!board.turn as usize][5-idx as usize] = 0;
-        board.pebbles[board.turn as usize][idx as usize] = 0;
+    if game_type == 'c' && side_placing_on == board.turn && board.stones[board.turn as usize][idx as usize] == 1 && board.stones[!(board.turn) as usize][(5-idx) as usize] > 0 {
+        let num_stones_captured = board.stones[!board.turn as usize][5-idx as usize];
+        board.stones[!board.turn as usize][5-idx as usize] = 0;
+        board.stones[board.turn as usize][idx as usize] = 0;
 
-        board.scores[board.turn as usize] += num_pebbles_captured+1
+        board.scores[board.turn as usize] += num_stones_captured+1
     }
     board.turn = if idx == -1 { board.turn } else { !board.turn };
 }
 
 fn gen_random_board(range: &Uniform<i16>, rng: &mut ThreadRng) -> Board {
-    let mut pebbles = [0; NUM_POCKETS];
+    let mut stones = [0; NUM_POCKETS];
     for i in 0..NUM_POCKETS {
-        pebbles[i] = range.sample(rng);
+        stones[i] = range.sample(rng);
     }
 
     Board {
-        pebbles: [pebbles, pebbles.clone()],
+        stones: [stones, stones.clone()],
         scores: [0, 0],
         turn: false,
     }
@@ -89,16 +89,18 @@ fn engine_vs_engine(a1: fn(&mut Board, f64, f64, i32, char) -> MiniMaxOutput,
     let mut rng = rand::thread_rng();
 
     for _i in 0..num_games {
-        println!("{_i}");
+        if _i%1000 == 0 {
+            println!("{_i}");
+        }
         let mut board = gen_random_board(&dist, &mut rng);
 
         while !is_gameover(&board) {
             while !board.turn && !is_gameover(&board) {
-                let best_move = player1(&mut board, f64::MIN, f64::MAX, 10, game_type).best_move as i16;
+                let best_move = player1(&mut board, f64::MIN, f64::MAX, 6, game_type).best_move as i16;
                 make_move(&mut board, best_move, game_type);
             }
             while board.turn && !is_gameover(&board) {
-                let best_move = player2(&mut board, f64::MIN, f64::MAX, 10, game_type).best_move as i16;
+                let best_move = player2(&mut board, f64::MIN, f64::MAX, 6, game_type).best_move as i16;
                 make_move(&mut board, best_move, game_type);
             }
         }
@@ -117,6 +119,22 @@ fn engine_vs_engine(a1: fn(&mut Board, f64, f64, i32, char) -> MiniMaxOutput,
     println!("algorithm 1 winrate: {}%\nalgorithm 2 winrate: {}%\ndraw rate: {}%", a1_winrate, a2_winrate, draw_rate);
 }
 
+fn stupid(board: &mut Board, _a: f64, _b: f64, _c: i32, _d: char) -> MiniMaxOutput {
+    for i in 0..board.stones[board.turn as usize].len() {
+        if board.stones[board.turn as usize][i] > 0 {
+            return MiniMaxOutput {
+                best_move: i,
+                eval: 0.0
+            };
+        }
+    }
+    println!("this is bad!");
+    return MiniMaxOutput {
+        best_move: 0,
+        eval: 0.0,
+    };
+}
+
 fn print_board(board: &Board) {
     println!("-------------------");
     println!("|                 |");
@@ -126,7 +144,7 @@ fn print_board(board: &Board) {
 
     for i in 0..NUM_POCKETS {
         println!("|        |        |");
-        println!("|  {:2}    |  {:2}    |", board.pebbles[0][i], board.pebbles[1][NUM_POCKETS-i-1]);
+        println!("|  {:2}    |  {:2}    |", board.stones[0][i], board.stones[1][NUM_POCKETS-i-1]);
         println!("|        |        |");
         println!("-------------------");
     }
@@ -139,14 +157,14 @@ fn print_board(board: &Board) {
 }
 
 fn is_gameover(board: &Board) -> bool {
-    board.pebbles[0].iter().sum::<i16>() == 0 ||
-    board.pebbles[1].iter().sum::<i16>() == 0
+    board.stones[0].iter().sum::<i16>() == 0 ||
+    board.stones[1].iter().sum::<i16>() == 0
 }
 
 fn get_game_result(board: &Board, game_type: char) -> GameResult {
     // It's assumed that the game is over when this fn is called.
     let difference = if game_type == 'c' {
-        board.scores[0] + board.pebbles[0].iter().sum::<i16>() - board.scores[1] - board.pebbles[1].iter().sum::<i16>()
+        board.scores[0] + board.stones[0].iter().sum::<i16>() - board.scores[1] - board.stones[1].iter().sum::<i16>()
     }
     else { // Avalanche
         board.scores[0] - board.scores[1]
@@ -164,14 +182,25 @@ fn get_game_result(board: &Board, game_type: char) -> GameResult {
 }
 
 fn eval(board: &Board) -> f64 {
-    return (board.scores[0] - board.scores[1]) as f64;
+    let mut eval = (board.scores[0] - board.scores[1]) as f64;
+    eval += if board.turn { -0.75 } else { 0.75 };
+
+    for i in 0..board.stones[board.turn as usize].len() {
+        if board.stones[0][i] + i as i16 == 6 {
+            eval += if !board.turn { 1.0 } else { 0.5 };
+        }
+        if board.stones[1][i] + i as i16 == 6 {
+            eval -= if board.turn { 1.0 } else { 0.5 };
+        }
+    }
+
+    return eval;
 }
 
 struct MiniMaxOutput {
     best_move: usize,
     eval: f64,
 }
-
 
 fn alpha_beta(board: &mut Board, mut alpha: f64, mut beta: f64, depth: i32, game_type: char) -> MiniMaxOutput {
     if depth == 0 {
@@ -186,7 +215,7 @@ fn alpha_beta(board: &mut Board, mut alpha: f64, mut beta: f64, depth: i32, game
         // as little as possible.
         let mut heuristic = board.scores[0] - board.scores[1];
         if game_type == 'c' {
-            heuristic += board.pebbles[0].iter().sum::<i16>() - board.pebbles[1].iter().sum::<i16>();
+            heuristic += board.stones[0].iter().sum::<i16>() - board.stones[1].iter().sum::<i16>();
         };
         return MiniMaxOutput {
             best_move: 0,
@@ -204,7 +233,7 @@ fn alpha_beta(board: &mut Board, mut alpha: f64, mut beta: f64, depth: i32, game
     let original = board.clone();
 
     for i in 0..NUM_POCKETS {
-        if board.pebbles[board.turn as usize][i] != 0 {
+        if board.stones[board.turn as usize][i] != 0 {
             make_move(board, i as i16, game_type);
             let move_score = alpha_beta(board, alpha, beta, depth-1, game_type).eval;
 
@@ -241,9 +270,9 @@ fn perft(board: &mut Board, depth: i32) -> u64 {
 
     let mut num_nodes = 0;
     for i in 0..NUM_POCKETS {
-        let num_pebbles = board.pebbles[board.turn as usize][i];
+        let num_stones = board.stones[board.turn as usize][i];
 
-        if num_pebbles != 0 {
+        if num_stones != 0 {
             let original = board.clone();
             make_move(board, i as i16, 'c');
             num_nodes += perft(board, depth-1);
@@ -261,37 +290,37 @@ mod tests {
     fn make_moves() {
         let boards = vec![
             Board { 
-                pebbles: [[4, 4, 0, 1, 0, 10], [4, 4, 4, 0, 4, 4]],
+                stones: [[4, 4, 0, 1, 0, 10], [4, 4, 4, 0, 4, 4]],
                 scores: [0, 0],
                 turn: false,
             }, 
             Board {
-                pebbles: [[5, 5, 0, 1, 0, 0], [5, 5, 5, 0, 5, 5]],
+                stones: [[5, 5, 0, 1, 0, 0], [5, 5, 5, 0, 5, 5]],
                 scores: [3, 0],
                 turn: true,
             },
             Board {
-                pebbles: [[5, 5, 0, 1, 0, 0], [5, 0, 6, 1, 6, 6]],
+                stones: [[5, 5, 0, 1, 0, 0], [5, 0, 6, 1, 6, 6]],
                 scores: [3, 1],
                 turn: true,
             },
             Board {
-                pebbles: [[6, 6, 1, 2, 1, 0], [5, 0, 6, 1, 6, 0]],
+                stones: [[6, 6, 1, 2, 1, 0], [5, 0, 6, 1, 6, 0]],
                 scores: [3, 2],
                 turn: false,
             },
             Board {
-                pebbles: [[6, 6, 0, 3, 1, 0], [5, 0, 6, 1, 6, 0]],
+                stones: [[6, 6, 0, 3, 1, 0], [5, 0, 6, 1, 6, 0]],
                 scores: [3, 2],
                 turn: true,
             },
             Board {
-                pebbles: [[0, 6, 0, 3, 1, 0], [0, 1, 7, 2, 7, 0]],
+                stones: [[0, 6, 0, 3, 1, 0], [0, 1, 7, 2, 7, 0]],
                 scores: [3, 9],
                 turn: false,
             },
             Board {
-                pebbles: [[0, 6, 0, 0, 2, 1], [0, 1, 7, 2, 7, 0]],
+                stones: [[0, 6, 0, 0, 2, 1], [0, 1, 7, 2, 7, 0]],
                 scores: [4, 9],
                 turn: false,
             },
@@ -327,22 +356,22 @@ mod tests {
     fn gameover() {
         let boards = vec! [
             Board { 
-                pebbles: [[4, 4, 0, 1, 0, 10], [4, 4, 4, 0, 4, 4]],
+                stones: [[4, 4, 0, 1, 0, 10], [4, 4, 4, 0, 4, 4]],
                 scores: [0, 0],
                 turn: false,
             }, 
             Board {
-                pebbles: [[0, 0, 0, 0, 0, 0], [5, 5, 5, 0, 5, 5]],
+                stones: [[0, 0, 0, 0, 0, 0], [5, 5, 5, 0, 5, 5]],
                 scores: [3, 0],
                 turn: true,
             },
             Board {
-                pebbles: [[5, 5, 0, 1, 0, 0], [0, 0, 0, 0, 0, 0]],
+                stones: [[5, 5, 0, 1, 0, 0], [0, 0, 0, 0, 0, 0]],
                 scores: [3, 1],
                 turn: true,
             },
             Board {
-                pebbles: [[6, 6, 1, 2, 1, 0], [5, 0, 6, 1, 6, 0]],
+                stones: [[6, 6, 1, 2, 1, 0], [5, 0, 6, 1, 6, 0]],
                 scores: [3, 2],
                 turn: false,
             },
@@ -359,14 +388,25 @@ mod tests {
 fn main() {
     // use std::time::Instant;
 
+    // engine_vs_engine(alpha_beta2, alpha_beta, 10000, 'c');
     // let mut board = Board {
-    //     pebbles: [[3, 3, 5, 1, 1, 3], [2, 3, 0, 2, 2, 4]],
-    //     scores: [0, 1],
+    //     stones: [[3, 1, 4, 5, 3, 5], [3, 1, 4, 5, 3, 5]],
+    //     scores: [0, 0],
     //     turn: false,
     // };
+
+//     let dist = Uniform::new(1, 6);
+//     let mut rng = rand::thread_rng();
     
-    // // println!("{}, {}", test.eval, test.best_move);
-    // let game_type = 'c';
+    let game_type = 'a';
+    // println!("{}", alpha_beta(&mut board, f64::MIN, f64::MAX, 16, game_type).eval);
+    for _i in 0..10 {
+        let dist = Uniform::new(1, 6);
+        let mut rng = rand::thread_rng();
+        let mut board = gen_random_board(&dist, &mut rng);
+
+    println!("{}", alpha_beta(&mut board, f64::MIN, f64::MAX, 16, game_type).eval);
+    }
 
     // print_board(&board);
     // while !is_gameover(&board) {
@@ -374,7 +414,7 @@ fn main() {
     //     let mut turn = board.turn;
     //     while turn == board.turn && !is_gameover(&board) {
     //         let best_move = alpha_beta(&mut board, f64::MIN, f64::MAX, 16, game_type).best_move;
-    //         println!("move: {best_move}, val: {}", board.pebbles[board.turn as usize][best_move]);
+    //         println!("move: {best_move}, val: {}", board.stones[board.turn as usize][best_move]);
     //         make_move(&mut board, best_move as i16, game_type);
     //         print_board(&board);
     //     }
@@ -393,10 +433,10 @@ fn main() {
     //     for i in 0..=1 {
     //         let mut sum = 0;
 
-    //         for j in 0..board.pebbles[i].len() {
-    //             let count = board.pebbles[i][j];
+    //         for j in 0..board.stones[i].len() {
+    //             let count = board.stones[i][j];
     //             sum += count;
-    //             board.pebbles[i][j] = 0;
+    //             board.stones[i][j] = 0;
     //         }
     //         board.scores[i] += sum;
     //     }
