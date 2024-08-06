@@ -10,28 +10,27 @@ using Board = std::vector<std::vector<char>>;
 using Coordinate = std::pair<int, int>;
 using Path = std::vector<Coordinate>;
 
-std::string reconstructPath(Board& board, Path& path) {
-    std::string word = "";
-    for (auto coordinate : path) {
-        word += board[coordinate.first][coordinate.second];
-    }
-    return word;
-}
-
 void search(Board& board, Path& path, 
             std::unordered_set<std::string>& dict, 
-            std::vector<std::string>& words) {
+            std::vector<std::string>& words, std::string& word) {
+
+    // This restriction keeps runtime low on larger boards at the cost
+    // of potentially missing out on extremely long words.
+    if (path.size() > 10) {
+        return;
+    }
 
     if (path.size() == 0) {
         for (auto y = 0; y < board.size(); ++y) {
             for (auto x = 0; x < board[0].size(); ++x) {
-                /* std::cout << "searching (" << x << ", " << y << ")" << std::endl; */
                 auto start = Coordinate(y, x);
 
                 path.push_back(start);
-                search(board, path, dict, words);
-                /* std::cout << path.size() << std::endl; */
+
+                word += board[start.first][start.second];
+                search(board, path, dict, words, word);
                 path.pop_back();
+                word.pop_back();
             }
         }
     }
@@ -45,10 +44,9 @@ void search(Board& board, Path& path,
         }
 
         if (path.size() >= 3) {
-            auto word = reconstructPath(board, path);
             if (dict.count(word) && std::find(words.begin(), words.end(), word) == words.end()) {
                 words.push_back(word);
-                std::cout << "found a word: " << word << std::endl;
+                /* std::cout << "found a word: " << word << std::endl; */
             }
         }
 
@@ -58,11 +56,13 @@ void search(Board& board, Path& path,
             for (auto x = current.second-1; x <= current.second+1; ++x) {
                 auto neighbour = Coordinate(y, x);
                 if (x < 0 || x >= board.size() || std::find(path.begin(), path.end(), neighbour) != path.end()) continue;
-                /* std::cout << "(" << x << ", " << y << ")" << std::endl; */
 
                 path.push_back(neighbour);
-                search(board, path, dict, words);
+                word += board[neighbour.first][neighbour.second];
+
+                search(board, path, dict, words, word);
                 path.pop_back();
+                word.pop_back();
             }
         }
     }
@@ -109,19 +109,15 @@ int main() {
         }
     }
 
-    /* Board board = { */
-    /*     {'C', 'A', 'T', 'D'}, */
-    /*     {'W', 'O', 'F', 'O'}, */
-    /*     {'I', 'R', 'D', 'G'}, */
-    /*     {'N', 'O', 'A', 'S'}, */
-    /* }; */
-
     std::vector<std::string> words;
     Path path;
-    search(board, path, dict, words);
+    std::string s = "";
+
+    search(board, path, dict, words, s);
 
     std::sort(words.begin(), words.end(), compare);
     for (auto word : words) {
         std::cout << word << ' ' << getScore(word) << '\n';
     }
+    std::cout << words.size() << '\n';
 }
