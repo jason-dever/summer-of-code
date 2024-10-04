@@ -120,4 +120,6 @@ int main() {
         std::cout << word << ' ' << getScore(word) << '\n';
     }
     std::cout << words.size() << '\n';
+
+    return 0;
 }
