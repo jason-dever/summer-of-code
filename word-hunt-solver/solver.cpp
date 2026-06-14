@@ -1,4 +1,6 @@
 #include <algorithm>
+#include <cctype>
+#include <chrono>
 #include <fstream>
 #include <iostream>
 #include <string>
@@ -16,9 +18,18 @@ void search(Board& board, Path& path,
 
     // This restriction keeps runtime low on larger boards at the cost
     // of potentially missing out on extremely long words.
-    if (path.size() > 10) {
-        return;
-    }
+    if (path.size() > 11) return;
+
+    // if (path.size() > 12) {
+    //     auto worth_searching = false;
+    //     for (auto potential_word : dict) {
+    //         if (potential_word.starts_with(word)) {
+    //             worth_searching = true;
+    //             break;
+    //         }
+    //     }
+    //     if (!worth_searching) return;
+    // }
 
     if (path.size() == 0) {
         for (auto y = 0; y < board.size(); ++y) {
@@ -102,10 +113,10 @@ int main() {
         board.push_back(std::vector<char>());
 
         for (auto j = 0; j < size; ++j) {
-            auto ch = ' ';
+            unsigned char ch = ' ';
             std::cin >> ch;
 
-            board[i].push_back(ch);
+            board[i].push_back(toupper(ch));
         }
     }
 
@@ -113,13 +124,18 @@ int main() {
     Path path;
     std::string s = "";
 
-    search(board, path, dict, words, s);
+    auto start = std::chrono::high_resolution_clock::now();
 
+    search(board, path, dict, words, s);
     std::sort(words.begin(), words.end(), compare);
+
+    auto end = std::chrono::high_resolution_clock::now();
+    auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end-start);
+
     for (auto word : words) {
         std::cout << word << ' ' << getScore(word) << '\n';
     }
-    std::cout << words.size() << '\n';
+    std::cout << words.size() << " words found in " << duration << '\n';
 
     return 0;
 }
